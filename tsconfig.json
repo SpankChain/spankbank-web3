@@ -5,6 +5,8 @@
     "noImplicitAny": false,
     "strictNullChecks": true,
     "experimentalDecorators": true,
+    "declaration": true,
+    "declarationDir": "@types",
     "forceConsistentCasingInFileNames": true,
     "lib": [
       "es5",
@@ -17,7 +19,6 @@
       "node_modules/@types",
     ],
     "sourceMap": true,
-    "allowJs": true,
     "types": ["node"],
     "outDir": "./dist/",
     "baseUrl": ".",

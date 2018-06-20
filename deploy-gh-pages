@@ -17,7 +17,6 @@ fi
 cleanup() {
     git reset --hard
     git checkout master
-    rm index.html
     git branch -D temp || true
 }
 trap cleanup EXIT
@@ -25,6 +24,7 @@ trap cleanup EXIT
 git branch -D temp || true
 git checkout -b temp
 npm run build
-mv example.html index.html
-ci -am "Build for gh-pages"
+cp example.html index.html
+git add -f index.html dist/
+git commit -am "Build for gh-pages"
 git push -f origin HEAD:gh-pages

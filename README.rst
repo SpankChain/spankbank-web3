@@ -31,7 +31,7 @@ Using ``spankbank`` in Your App
 
     $ npm run build
     ...
-    $ cp -r dist/spankbank ../your-application/lib/spankbank
+    $ cp -r dist/ ../your-application/lib/spankbank
 
 2. If your application is using TypeScript, add ``lib/spankbank/@types`` to
    ``typeRoots`` in ``tsconfig.json``

@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "build": "rm -r dist; webpack"
   },
   "devDependencies": {
     "@types/node": "^10.3.4",
