@@ -6,11 +6,9 @@ Overview
 - Initial target (~Thursday) will be calling the smart contract functions
 - Shortly after will be exposing the API @euforic is building
 - It is not clear whether or not the API will be open sourced
-- The concrete deliverable will be an unstyled ``spankbank.html`` page, with
+- The concrete deliverable will be an unstyled ``example.html`` page, with
   buttons for “stake”, “checkIn”, etc
-    - This will use a minimal amount Angular so that it can be one single
-      self-contained file.
-- This will be done out of a separate ``spankbank-js`` repo
+- This will be done out of a separate ``spankbank-web3`` repo
 - For now, focus on the happy path, deal with edge cases later
 - Use webpack to build ``spankbank.ts`` along with the contract's ABI into
   a single file.
@@ -20,7 +18,7 @@ Overview
 
 Immediate deliverables will be:
 
-- Implementation of that proposal, including ``spankbank.html`` (Thursday?)
+- Implementation of that proposal, including ``example.html`` (Thursday?)
 
 Using ``spankbank`` in Your App
 ===============================
