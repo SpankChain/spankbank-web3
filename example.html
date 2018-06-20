@@ -52,7 +52,9 @@
         inputRefs: {},
 
         componentWillMount: function() {
-          this.setState({})
+          this.setState({
+            values: this.props.getSet(this.props.name) || {},
+          })
         },
 
         callFunc: function() {
@@ -61,7 +63,17 @@
             res: undefined,
           })
 
-          let args = this.props.args.map(arg => this.inputRefs[arg[0]].value)
+          let stateValues = {}
+          let args = this.props.args.map(arg => {
+            let value = this.inputRefs[arg[0]].value
+            stateValues[arg[0]] = value
+            return value
+          })
+          this.props.getSet(this.props.name, stateValues)
+          this.setState({
+            values: stateValues,
+          })
+
           this.props.spankbank[this.props.name](...args)
             .then(res => this.setState({ res: res }))
             .catch(err => this.setState({ res: err }))
@@ -82,7 +94,7 @@
                   className="form-control"
                   id={p.name + '-arg-' + arg[0]}
                   placeholder={arg[0]}
-                  defaultValue={inputValue(arg)} />
+                  defaultValue={this.state.values[arg[0]] || inputValue(arg)} />
                 </div>
               </div>
             ))}
@@ -159,19 +171,19 @@
               spankbank={sb}
               name="stake"
               args={[["spankAmount", "SpankAmount"], ["stakePeriods", "number"], ["activityKey", "EthAddress"], ["bootyBase", "EthAddress"]]}
-              hasResult={false} />
+              getSet={this.getSetFormField.bind(this)} />
 
             <FunctionCall
               spankbank={sb}
               name="getSpankPoints"
               args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
-              hasResult={true} />
+              getSet={this.getSetFormField.bind(this)} />
 
             <FunctionCall
               spankbank={sb}
               name="getDidClaimBooty"
               args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
-              hasResult={true} />
+              getSet={this.getSetFormField.bind(this)} />
 
           </div>)
         },
