@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>SpankBank-web3</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  </head>
+  <body>
+    <div id="container" class="container">Loading...</div>
+
+    <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+    <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script src="./dist/spankbank.js"></script>
+
+    <script type="text/babel">
+      let Input = React.createClass({
+        render: function() {
+          let p = this.props
+          return (<div className="form-group">
+            <label>{p.label}</label>
+            <input type="text" className="form-control" defaultValue={p.getSet(p.name) || ''}
+              onBlur={e => p.getSet(p.name, e.target.value)}
+              onKeyPress={e => event.key == 'Enter' && p.getSet(p.name, e.target.value)} />
+          </div>)
+        },
+      })
+
+      function inputType(arg) {
+        if (arg[1] == "number")
+          return "number"
+        return "text"
+      }
+
+      function inputValue(arg) {
+        if (arg[0] == "period")
+          return 1
+        if (arg[1] == "EthAddress")
+          return web3.eth.defaultAccount
+        return ""
+      }
+
+      let FunctionCall = React.createClass({
+        inputRefs: {},
+
+        componentWillMount: function() {
+          this.setState({})
+        },
+
+        callFunc: function() {
+          this.setState({
+            pending: true,
+            res: undefined,
+          })
+
+          let args = this.props.args.map(arg => this.inputRefs[arg[0]].value)
+          this.props.spankbank[this.props.name](...args)
+            .then(res => this.setState({ res: res }))
+            .catch(err => this.setState({ res: err }))
+            .finally(() => this.setState({ pending: false }))
+        },
+
+        render: function() {
+          let p = this.props
+          return (<div className="form-group">
+            <h2><tt>{p.name}</tt></h2>
+            {p.args.map(arg => (
+              <div className="form-group row">
+                <label for={p.name + '-arg-' + arg[0]} className="col-sm-2 col-form-label"><tt>{arg[0]}</tt></label>
+                <div className="col-sm-10">
+                <input
+                  ref={ref => this.inputRefs[arg[0]] = ref}
+                  type={inputType(arg)}
+                  className="form-control"
+                  id={p.name + '-arg-' + arg[0]}
+                  placeholder={arg[0]}
+                  defaultValue={inputValue(arg)} />
+                </div>
+              </div>
+            ))}
+            <button type="button" className="btn btn-primary" onClick={() => this.callFunc()} disabled={this.state.pending}>Call</button>
+            {this.state.res !== undefined && (<div>
+              <h3 style={{ marginTop: '20px' }}>Result:</h3>
+              <pre>
+                {JSON.stringify(this.state.res)}
+                {this.state.res && this.state.res.stack && '\n' + this.state.res.stack}
+              </pre>
+            </div>)}
+          </div>)
+        },
+      })
+
+      let SpankBankWeb3Example = React.createClass({
+        componentWillMount: function() {
+          let savedForm = JSON.parse(window.localStorage['spankbank-saved-state'] || 'null') || {
+            contractAddress: '0x7254fbf3d9cc2ae5a34d4f906af51e58dde4fc66',
+          }
+          this.setState({
+            loaded: false,
+            form: savedForm,
+          })
+        },
+
+        getSetFormField: function(name, val) {
+          if (val === undefined)
+            return this.state.form[name]
+          this.setState({
+            form: {
+              ...this.state.form,
+              [name]: val,
+            },
+          }, () => {
+            window.localStorage['spankbank-saved-state'] = JSON.stringify(this.state.form)
+          })
+        },
+
+        render: function() {
+          if (window.location.protocol == 'file:') {
+            return <div>
+              <p>Error: web3 can only be used from http(s):// pages.</p>
+              <p>Try using <tt>npm start</tt> or <tt>./example-server</tt>.</p>
+            </div>
+          }
+
+          let s = this.state
+          let sb = new spankbank.SpankBank(s.contractAddress)
+
+          if (!sb.isLoaded) {
+            sb.loaded.then(() => {
+              this.setState({ loaded: true })
+            })
+            return <p>Waiting for Web3 to load...</p>
+          }
+
+          if (!sb.hasWeb3) {
+            return <p>
+              Error: web3 not found or locked. Try unlocking then refreshing,
+              or installing Metamask:
+              <a href="https://metamask.io/">https://metamask.io</a>
+            </p>
+          }
+
+          return (<div>
+            <h1>SpankBank Web3 Example</h1>
+
+            <Input getSet={this.getSetFormField.bind(this)} name="contractAddress" label="Contract Address" />
+
+            <hr />
+
+            <FunctionCall
+              spankbank={sb}
+              name="stake"
+              args={[["spankAmount", "SpankAmount"], ["stakePeriods", "number"], ["activityKey", "EthAddress"], ["bootyBase", "EthAddress"]]}
+              hasResult={false} />
+
+            <FunctionCall
+              spankbank={sb}
+              name="getSpankPoints"
+              args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
+              hasResult={true} />
+
+            <FunctionCall
+              spankbank={sb}
+              name="getDidClaimBooty"
+              args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
+              hasResult={true} />
+
+          </div>)
+        },
+      });
+
+      ReactDOM.render(
+        <SpankBankWeb3Example />,
+        document.getElementById('container')
+      );
+    </script>
+
+  </body>
+</html>
