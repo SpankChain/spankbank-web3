@@ -50,6 +50,13 @@ Using ``spankbank`` in Your App
         console.log('You have', spankPoints, 'spankPoints in period 1!')
       })
 
+Developing
+==========
+
+To develop, run::
+
+    $ yarn
+    $ npm start
 
 API Overview
 ============

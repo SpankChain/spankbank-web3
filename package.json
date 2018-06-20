@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "tsc-watch --onFirstSuccess './example-server' --onSuccess './example-server --no-open'"
+    "start": "webpack-dev-server"
   },
   "devDependencies": {
     "@types/node": "^10.3.4",
