@@ -42,10 +42,16 @@ type SpankAmount = number
 type SpankPoints = number
 type BootyAmount = number
 
-class MetamaskError extends Error {
-  metamaskError: string
+type MetamaskErrorType =
+  'NO_METAMASK' |
+  'NOT_SIGNED_IN' |
+  'REJECTED_SIGNATURE' |
+  'UNKNOWN_ERROR'
 
-  constructor(metamaskError, msg) {
+class MetamaskError extends Error {
+  metamaskError: MetamaskErrorType
+
+  constructor(metamaskError: MetamaskErrorType, msg) {
     super(msg + ' (' + metamaskError + ')')
     this.metamaskError = metamaskError
   }
@@ -88,7 +94,7 @@ export class SpankBank {
       fn((err, val) => {
         console.log('metamask result:', err, val)
         if (err) {
-          if (/MetaMask Message Signature: User denied message signature/.exec(err.message)) {
+          if (/User denied transaction signature/.exec('' + err)) {
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
           }
           return reject(new MetamaskError('UNKNOWN_ERROR', '' + err))
@@ -114,7 +120,7 @@ export class SpankBank {
     activityKey: EthAddress,
     bootyBase: EthAddress
   ): Promise<void> {
-
+    return this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase])
   }
 
   getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
@@ -122,7 +128,7 @@ export class SpankBank {
   }
 
   async getDidClaimBooty(stakerAddress: EthAddress, period: number): Promise<boolean> {
-    return false
+    return this._call('getDidClaimBooty', [stakerAddress, period])
   }
 
   async sendFees(bootyAmount: BootyAmount): Promise<void> {
