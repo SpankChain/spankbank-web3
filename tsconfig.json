@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "es5",
+      "es2015",
+      "es6",
+      "dom",
+      "es2017.object"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+    ],
+    "sourceMap": true,
+    "allowJs": true,
+    "types": ["node"],
+    "outDir": "./dist/",
+    "baseUrl": ".",
+    "paths": {}
+  },
+  "include": [
+    "spankbank.ts",
+  ],
+  "exclude": [
+    "node_modules/**",
+  ],
+  "typeRoots": [
+    "node_modules/@types",
+  ]
+}
