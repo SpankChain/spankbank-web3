@@ -55,14 +55,14 @@ class MetamaskError extends Error {
   }
 }
 
-export class SpankBank {
-  static contractAbi: any = require('./contracts/20180615-51f61af5/SpankBank.json').abi
-
+abstract class SmartContractWrapper {
   isLoaded: boolean = false
   hasWeb3: boolean | null = null
   loaded: Promise<void>
 
   contractAddress: EthAddress
+
+  abstract getContractAbi(): any
 
   constructor(contractAddress: EthAddress) {
     this.contractAddress = contractAddress
@@ -113,6 +113,15 @@ export class SpankBank {
         .at(this.contractAddress)
         [contractFuncName](...args, cb)
     })
+  }
+}
+
+
+export class SpankBank extends SmartContractWrapper {
+  static contractAbi: any = require('./contracts/20180615-51f61af5/SpankBank.json').abi
+
+  getContractAbi() {
+    return SpankBank.contractAbi
   }
 
   async stake(
@@ -171,5 +180,34 @@ export class SpankBank {
 
   async updateBootyBase(newBootyBase: EthAddress): Promise<void> {
     return await this._call('updateBootyBase', [newBootyBase])
+  }
+}
+
+
+export class Token extends SmartContractWrapper {
+  static contractAbi: any = require('./contracts/20180615-51f61af5/Token.json').abi
+
+  getContractAbi() {
+    return Token.contractAbi
+  }
+
+  async balanceOf(owner: EthAddress): Promise<BootyAmount> {
+    return await this._call('balanceOf', [owner])
+  }
+
+  async transfer(to: EthAddress, value: BootyAmount): Promise<boolean> {
+    return await this._call('transfer', [to, value])
+  }
+
+  async transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<boolean> {
+    return await this._call('transferFrom', [from, to, value])
+  }
+
+  async approve(spender: EthAddress, value: BootyAmount): Promise<boolean> {
+    return await this._call('approve', [spender, value])
+  }
+
+  async allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount> {
+    return await this._call('allowance', [owner, spender])
   }
 }
