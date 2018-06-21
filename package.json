@@ -1,4 +1,6 @@
 {
+  "name": "spankbank-web3",
+  "version": "0.0.1",
   "scripts": {
     "start": "webpack-dev-server",
     "build": "rm -r dist; webpack",
