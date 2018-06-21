@@ -83,6 +83,7 @@
           this.setState({
             pending: true,
             res: undefined,
+            error: false,
           })
 
           let stateValues = {}
@@ -97,8 +98,10 @@
           })
 
           this.props.smartContract[this.props.func.name](...args)
-            .then(res => this.setState({ res: res }))
-            .catch(err => this.setState({ res: err }))
+            .then(
+              res => this.setState({ res: res }),
+              err => this.setState({ res: err, error: true })
+            )
             .finally(() => this.setState({ pending: false }))
         },
 
@@ -124,7 +127,7 @@
             {this.state.res !== undefined && (<div>
               <h4 style={{ marginTop: '20px' }}>Result:</h4>
               <pre>
-                {func.returnType == 'TxHash' ?
+                {func.returnType == 'TxHash' && !this.state.error ?
                   <a href={'https://rinkeby.etherscan.io/tx/' + this.state.res}>{this.state.res}</a> :
                   JSON.stringify(this.state.res)
                 }
@@ -200,6 +203,16 @@
             return <div>
               <p>Error: web3 can only be used from http(s):// pages.</p>
               <p>Try using <tt>npm start</tt> or <tt>./example-server</tt>.</p>
+            </div>
+          }
+
+          if (!window.exampleDefs) {
+            return <div>
+              <p>Error: the <tt>example-defs.js</tt> scripts was not loaded.</p>
+              <p>
+                Make sure it was build, which should happen automatically, but
+                if not, run <tt>./example-build-defs.ts</tt>.
+              </p>
             </div>
           }
 
