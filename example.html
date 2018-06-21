@@ -75,7 +75,7 @@
 
         componentWillMount: function() {
           this.setState({
-            values: this.props.getSet(this.props.name) || {},
+            values: this.props.getSet(this.props.func.name) || {},
           })
         },
 
@@ -86,35 +86,35 @@
           })
 
           let stateValues = {}
-          let args = this.props.args.map(arg => {
+          let args = this.props.func.args.map(arg => {
             let value = this.inputRefs[arg.name].value
             stateValues[arg.name] = value
             return value
           })
-          this.props.getSet(this.props.name, stateValues)
+          this.props.getSet(this.props.func.name, stateValues)
           this.setState({
             values: stateValues,
           })
 
-          this.props.smartContract[this.props.name](...args)
+          this.props.smartContract[this.props.func.name](...args)
             .then(res => this.setState({ res: res }))
             .catch(err => this.setState({ res: err }))
             .finally(() => this.setState({ pending: false }))
         },
 
         render: function() {
-          let p = this.props
+          let { func } = this.props
           return (<div className="form-group smart-contract-function">
-            <h3><tt>{p.name}</tt></h3>
-            {p.args.map(arg => (
+            <h3><tt>{func.name}</tt></h3>
+            {func.args.map(arg => (
               <div className="form-group row">
-                <label for={p.name + '-arg-' + arg.name} className="col-sm-2 col-form-label"><tt>{arg.name}</tt></label>
+                <label for={func.name + '-arg-' + arg.name} className="col-sm-2 col-form-label"><tt>{arg.name}</tt></label>
                 <div className="col-sm-10">
                 <input
                   ref={ref => this.inputRefs[arg.name] = ref}
                   type={inputType(arg)}
                   className="form-control"
-                  id={p.name + '-arg-' + arg.name}
+                  id={func.name + '-arg-' + arg.name}
                   placeholder={arg.name}
                   defaultValue={this.state.values[arg.name] || inputValue(arg)} />
                 </div>
@@ -124,7 +124,10 @@
             {this.state.res !== undefined && (<div>
               <h4 style={{ marginTop: '20px' }}>Result:</h4>
               <pre>
-                {JSON.stringify(this.state.res)}
+                {func.returnType == 'TxHash' ?
+                  <a href={'https://rinkeby.etherscan.io/address/' + this.state.res}>{this.state.res}</a> :
+                  JSON.stringify(this.state.res)
+                }
                 {this.state.res && this.state.res.stack && '\n' + this.state.res.stack}
               </pre>
             </div>)}
@@ -182,8 +185,7 @@
               {this.props.methods.map(func => (
                 <FunctionCall
                   smartContract={sc}
-                  name={func.name}
-                  args={func.args}
+                  func={func}
                   getSet={this.getSetFormField.bind(this)} />
               ))}
             </div>
