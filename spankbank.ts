@@ -107,6 +107,7 @@ abstract class SmartContractWrapper {
   async _call(contractFuncName, args?): Promise<any> {
     args = args || []
     return await this._metamaskCall(cb => {
+      console.log(this.contractAddress, contractFuncName, args)
       window.web3
         .eth
         .contract(this.getContractAbi())
@@ -122,6 +123,30 @@ export class SpankBank extends SmartContractWrapper {
 
   getContractAbi() {
     return SpankBank.contractAbi
+  }
+
+  async periodLength(): Promise<number> {
+    return await this._call('periodLength')
+  }
+
+  async maxPeriods(): Promise<number> {
+    return await this._call('maxPeriods')
+  }
+
+  async totalSpankStaked(): Promise<number> {
+    return await this._call('totalSpankStaked')
+  }
+
+  async unwindVotes(): Promise<number> {
+    return await this._call('unwindVotes')
+  }
+
+  async unwindPeriod(): Promise<number> {
+    return await this._call('unwindPeriod')
+  }
+
+  async currentPeriod(): Promise<number> {
+    return await this._call('currentPeriod')
   }
 
   async stake(
@@ -147,6 +172,10 @@ export class SpankBank extends SmartContractWrapper {
 
   async mintBooty(): Promise<void> {
     return await this._call('mintBooty')
+  }
+
+  async updatePeriod(): Promise<void> {
+    return await this._call('updatePeriod')
   }
 
   async checkIn(updatedEndingPeriod: number): Promise<void> {

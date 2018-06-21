@@ -156,7 +156,7 @@
 
         render: function() {
           let s = this.state
-          let sc = new spankbank[this.props.className](s.contractAddress)
+          let sc = new spankbank[this.props.className](s.form.contractAddress)
 
           if (!sc.isLoaded) {
             sc.loaded.then(() => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { writeFileSync } from 'fs'
+import * as fs from 'fs'
 
 import * as mp from './metaprogramming'
 
@@ -15,4 +15,6 @@ for (let className of ['SpankBank', 'Token']) {
   })
 }
 
-writeFileSync(__dirname + '/dist/example-defs.js', 'window.exampleDefs = ' + JSON.stringify(defs))
+if (!fs.existsSync(__dirname + '/dist/'))
+  fs.mkdirSync(__dirname + '/dist/')
+fs.writeFileSync(__dirname + '/dist/example-defs.js', 'window.exampleDefs = ' + JSON.stringify(defs))
