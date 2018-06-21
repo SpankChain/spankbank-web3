@@ -109,7 +109,7 @@ abstract class SmartContractWrapper {
     return await this._metamaskCall(cb => {
       window.web3
         .eth
-        .contract(SpankBank.contractAbi)
+        .contract(this.getContractAbi())
         .at(this.contractAddress)
         [contractFuncName](...args, cb)
     })

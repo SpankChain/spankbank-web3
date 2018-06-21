@@ -1,4 +1,6 @@
 let path = require('path')
+let WebpackShellPlugin = require('webpack-shell-plugin')
+
 
 module.exports = {
   entry: './spankbank.ts',
@@ -22,6 +24,12 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     library: ['spankbank'],
   },
+
+  plugins: [
+    new WebpackShellPlugin({
+      onBuildEnd:['npm run example-build-defs'],
+    }),
+  ],
 
   devServer: {
     contentBase: path.join(__dirname),
