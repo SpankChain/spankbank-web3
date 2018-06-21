@@ -15,5 +15,8 @@
     "webpack-cli": "^3.0.8",
     "webpack-dev-server": "^3.1.4",
     "webpack-shell-plugin": "^0.5.0"
+  },
+  "dependencies": {
+    "spankbank": "git+ssh://git@github.com:SpankChain/spankbank.git#8c4d1a71a2e4fec04ac18ec61b128554929a58f3"
   }
 }
