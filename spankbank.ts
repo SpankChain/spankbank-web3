@@ -133,7 +133,7 @@ export class SpankBank {
   }
 
   async sendFees(bootyAmount: BootyAmount): Promise<void> {
-    return await this._call('getDidClaimBooty', [bootyAmount])
+    return await this._call('sendFees', [bootyAmount])
   }
 
   async mintBooty(): Promise<void> {

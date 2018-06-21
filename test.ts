@@ -112,8 +112,31 @@ let sourceFile = ts.createSourceFile(
   /*setParentNodes */ true
 )
 
+// todo: clean this up
 let definedMethods: any[] = []
 processSpankBank(sourceFile)
+
+let mismatchedCalls: any[] = []
+definedMethods.forEach(m => {
+  let expectedArgs = (
+    m.args.length == 0 ? '' :
+    `, [${m.args.map(a => a.name).join(', ')}]`
+  )
+  let expectedCall = `this._call('${m.name}'${expectedArgs})`
+  if (expectedCall != m.call) {
+    mismatchedCalls.push({
+      method: m,
+      expected: expectedCall,
+      actual: m.call,
+    })
+  }
+})
+
+mismatchedCalls.forEach(mc => {
+  console.error(mc.method.name + ': does not correctly call metamask!')
+  console.error('Expected:', mc.expected)
+  console.error('  Actual:', mc.actual)
+})
 
 let expectedMethods = getExpectedMethodsFromContractAbi(spankbank.SpankBank.contractAbi)
 let missingMethods: any[] = []
@@ -152,7 +175,10 @@ mismatchedMethods.forEach(m => {
   console.error('  Actual:', m.actual.args.map(arg => arg.name + ': ' + tsArgTypeToSolType(arg.type)).join(', '))
 })
 
-if (mismatchedMethods.length)
+if (mismatchedMethods.length || mismatchedCalls.length)
   process.exit(1)
 
 console.log('Okay!')
+
+// TODO:
+// - Add token methods
