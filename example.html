@@ -21,6 +21,136 @@
 
     <script src="./dist/spankbank.js"></script>
 
+    <script>
+      let spankbankFunctions = [
+        {
+          "args": [
+            [
+              "spankAmount",
+              "SpankAmount"
+            ],
+            [
+              "stakePeriods",
+              "number"
+            ],
+            [
+              "activityKey",
+              "EthAddress"
+            ],
+            [
+              "bootyBase",
+              "EthAddress"
+            ]
+          ],
+          "name": "stake"
+        },
+        {
+          "args": [
+            [
+              "stakerAddress",
+              "EthAddress"
+            ],
+            [
+              "period",
+              "number"
+            ]
+          ],
+          "name": "getSpankPoints"
+        },
+        {
+          "args": [
+            [
+              "stakerAddress",
+              "EthAddress"
+            ],
+            [
+              "period",
+              "number"
+            ]
+          ],
+          "name": "getDidClaimBooty"
+        },
+        {
+          "args": [
+            [
+              "bootyAmount",
+              "BootyAmount"
+            ]
+          ],
+          "name": "sendFees"
+        },
+        {
+          "args": [],
+          "name": "mintBooty"
+        },
+        {
+          "args": [
+            [
+              "updatedEndingPeriod",
+              "number"
+            ]
+          ],
+          "name": "checkIn"
+        },
+        {
+          "args": [
+            [
+              "period",
+              "number"
+            ]
+          ],
+          "name": "claimBooty"
+        },
+        {
+          "args": [],
+          "name": "withdrawStake"
+        },
+        {
+          "args": [
+            [
+              "newAddress",
+              "EthAddress"
+            ],
+            [
+              "newActivityKey",
+              "EthAddress"
+            ],
+            [
+              "newBootyBase",
+              "EthAddress"
+            ],
+            [
+              "spankAmount",
+              "SpankAmount"
+            ]
+          ],
+          "name": "splitStake"
+        },
+        {
+          "args": [],
+          "name": "voteToUnwind"
+        },
+        {
+          "args": [
+            [
+              "newActivityKey",
+              "EthAddress"
+            ]
+          ],
+          "name": "updateActivityKey"
+        },
+        {
+          "args": [
+            [
+              "newBootyBase",
+              "EthAddress"
+            ]
+          ],
+          "name": "updateBootyBase"
+        }
+      ]
+    </script>
+
     <script type="text/babel">
       let Input = React.createClass({
         render: function() {
@@ -35,7 +165,7 @@
       })
 
       function inputType(arg) {
-        if (arg[1] == "number")
+        if (arg[1] == "number" || arg[1] == "BootyAmount")
           return "number"
         return "text"
       }
@@ -167,23 +297,13 @@
 
             <hr />
 
-            <FunctionCall
-              spankbank={sb}
-              name="stake"
-              args={[["spankAmount", "SpankAmount"], ["stakePeriods", "number"], ["activityKey", "EthAddress"], ["bootyBase", "EthAddress"]]}
-              getSet={this.getSetFormField.bind(this)} />
-
-            <FunctionCall
-              spankbank={sb}
-              name="getSpankPoints"
-              args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
-              getSet={this.getSetFormField.bind(this)} />
-
-            <FunctionCall
-              spankbank={sb}
-              name="getDidClaimBooty"
-              args={[["stakerAddress", "EthAddress"], ["period", "number"]]}
-              getSet={this.getSetFormField.bind(this)} />
+            {spankbankFunctions.map(func => (
+              <FunctionCall
+                spankbank={sb}
+                name={func.name}
+                args={func.args}
+                getSet={this.getSetFormField.bind(this)} />
+            ))}
 
           </div>)
         },

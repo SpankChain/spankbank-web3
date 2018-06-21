@@ -104,7 +104,8 @@ export class SpankBank {
     })
   }
 
-  async _call(contractFuncName, args): Promise<any> {
+  async _call(contractFuncName, args?): Promise<any> {
+    args = args || []
     return await this._metamaskCall(cb => {
       window.web3
         .eth
@@ -120,30 +121,35 @@ export class SpankBank {
     activityKey: EthAddress,
     bootyBase: EthAddress
   ): Promise<void> {
-    return this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase])
+    return await this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase])
   }
 
-  getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
-    return this._call('getSpankPoints', [stakerAddress, period])
+  async getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
+    return await this._call('getSpankPoints', [stakerAddress, period])
   }
 
   async getDidClaimBooty(stakerAddress: EthAddress, period: number): Promise<boolean> {
-    return this._call('getDidClaimBooty', [stakerAddress, period])
+    return await this._call('getDidClaimBooty', [stakerAddress, period])
   }
 
   async sendFees(bootyAmount: BootyAmount): Promise<void> {
+    return await this._call('getDidClaimBooty', [bootyAmount])
   }
 
   async mintBooty(): Promise<void> {
+    return await this._call('mintBooty')
   }
 
   async checkIn(updatedEndingPeriod: number): Promise<void> {
+    return await this._call('checkIn', [updatedEndingPeriod])
   }
 
   async claimBooty(period: number): Promise<void> {
+    return await this._call('claimBooty', [period])
   }
 
   async withdrawStake(): Promise<void> {
+    return await this._call('withdrawStake')
   }
 
   async splitStake(
@@ -152,14 +158,18 @@ export class SpankBank {
     newBootyBase: EthAddress,
     spankAmount: SpankAmount
   ): Promise<void> {
+    return await this._call('splitStake', [newAddress, newActivityKey, newBootyBase, spankAmount])
   }
 
   async voteToUnwind(): Promise<void> {
+    return await this._call('voteToUnwind')
   }
 
   async updateActivityKey(newActivityKey: EthAddress): Promise<void> {
+    return await this._call('updateActivityKey', [newActivityKey])
   }
 
   async updateBootyBase(newBootyBase: EthAddress): Promise<void> {
+    return await this._call('updateBootyBase', [newBootyBase])
   }
 }
