@@ -7,8 +7,6 @@ declare global {
   }
 }
 
-let contractJson = require('./contracts/20180615-51f61af5/SpankBank.json')
-
 // A promise that will resolve once web3 is fully loaded, including Ethereum
 // accounts.
 let web3FullyLoaded = false
@@ -26,7 +24,7 @@ let onWeb3Load: Promise<void> = new Promise(res => {
     }
   }
 
-  window.addEventListener('load', onLoad)
+  typeof window !== 'undefined' && window.addEventListener('load', onLoad)
 })
 
 
@@ -58,6 +56,8 @@ class MetamaskError extends Error {
 }
 
 export class SpankBank {
+  static contractAbi: any = require('./contracts/20180615-51f61af5/SpankBank.json').abi
+
   isLoaded: boolean = false
   hasWeb3: boolean | null = null
   loaded: Promise<void>
@@ -109,7 +109,7 @@ export class SpankBank {
     return await this._metamaskCall(cb => {
       window.web3
         .eth
-        .contract(contractJson.abi)
+        .contract(SpankBank.contractAbi)
         .at(this.contractAddress)
         [contractFuncName](...args, cb)
     })

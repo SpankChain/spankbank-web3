@@ -1,7 +1,9 @@
 #!/usr/bin/env ts-node
 
-import {readFileSync} from "fs"
-import * as ts from "typescript"
+import { readFileSync } from 'fs'
+import * as ts from 'typescript'
+
+import * as spankbank from './spankbank'
 
 function findFunctionCall(node: ts.Node, name: string) {
   let call
@@ -67,7 +69,40 @@ export function processSpankBank(sourceFile: ts.SourceFile) {
   }
 
   recurse(sourceFile)
+}
 
+function getExpectedMethodsFromContractAbi(abi): any[] {
+  let expectedMethods: any[] = []
+  abi.forEach(method => {
+    if (method.type !== 'function')
+      return
+
+    expectedMethods.push({
+      name: method.name,
+      returnType: method.outputs[0] && method.outputs[0].type,
+      args: method.inputs.map(arg => ({
+        ...arg,
+        name: arg.name.replace(/^_*/, ''),
+      })),
+    })
+  })
+  return expectedMethods
+}
+
+function writeMethodsJson() {
+  process.stderr.write(JSON.stringify(definedMethods.map(m => ({
+    name: m.name,
+    args: m.args.map(a => [a.name, a.type]),
+  }))))
+}
+
+function tsArgTypeToSolType(type) {
+  return {
+    number: 'uint256',
+    EthAddress: 'address',
+    SpankAmount: 'uint256',
+    BootyAmount: 'uint256',
+  }[type] || type
 }
 
 let sourceFile = ts.createSourceFile(
@@ -79,12 +114,45 @@ let sourceFile = ts.createSourceFile(
 
 let definedMethods: any[] = []
 processSpankBank(sourceFile)
-console.log(definedMethods)
 
-process.stderr.write(JSON.stringify(definedMethods.map(m => ({
-  name: m.name,
-  args: m.args.map(a => [a.name, a.type]),
-}))))
+let expectedMethods = getExpectedMethodsFromContractAbi(spankbank.SpankBank.contractAbi)
+let missingMethods: any[] = []
+let mismatchedMethods: any[] = []
+expectedMethods.forEach(method => {
+  let definedMethod = definedMethods.filter(m => m.name == method.name)[0]
+  if (!definedMethod) {
+    missingMethods.push(method)
+    return
+  }
 
+  // compare arguments
+  for (let i = 0; i < Math.max(definedMethod.args.length, method.args.length); i += 1) {
+    let dArg = definedMethod.args[i]
+    let mArg = method.args[i]
+    let argMismatch = (
+      (!dArg || !mArg) ||
+      (dArg.name != mArg.name) ||
+      (tsArgTypeToSolType(dArg.type) != mArg.type)
+    )
 
-  
+    if (argMismatch) {
+      mismatchedMethods.push({
+        expected: method,
+        actual: definedMethod,
+      })
+      return
+    }
+  }
+
+})
+
+mismatchedMethods.forEach(m => {
+  console.error(m.expected.name + ': argument mismatch!')
+  console.error('Expected:', m.expected.args.map(arg => arg.name + ': ' + arg.type).join(', '))
+  console.error('  Actual:', m.actual.args.map(arg => arg.name + ': ' + tsArgTypeToSolType(arg.type)).join(', '))
+})
+
+if (mismatchedMethods.length)
+  process.exit(1)
+
+console.log('Okay!')
