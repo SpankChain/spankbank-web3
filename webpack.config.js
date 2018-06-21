@@ -27,7 +27,7 @@ module.exports = {
 
   plugins: [
     new WebpackShellPlugin({
-      onBuildEnd:['npm run example-build-defs'],
+      onBuildStart: ['npm run example-build-defs'],
     }),
   ],
 

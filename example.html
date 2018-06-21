@@ -125,7 +125,7 @@
               <h4 style={{ marginTop: '20px' }}>Result:</h4>
               <pre>
                 {func.returnType == 'TxHash' ?
-                  <a href={'https://rinkeby.etherscan.io/address/' + this.state.res}>{this.state.res}</a> :
+                  <a href={'https://rinkeby.etherscan.io/tx/' + this.state.res}>{this.state.res}</a> :
                   JSON.stringify(this.state.res)
                 }
                 {this.state.res && this.state.res.stack && '\n' + this.state.res.stack}
