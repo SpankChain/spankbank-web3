@@ -41,7 +41,7 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
       m.args.length == 0 ? '' :
       `, [${m.args.map(a => a.name).join(', ')}]`
     )
-    let expectedCall = `return await this._call('${m.name}'${expectedArgs})`
+    let expectedCall = `return sol2tsCasts.${m.returnType}(await this._call('${m.name}'${expectedArgs}))`
     if (expectedCall != m.call) {
       mismatchedCalls.push({
         method: m,

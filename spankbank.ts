@@ -29,16 +29,11 @@ let onWeb3Load: Promise<void> = new Promise(res => {
 
 
 type EthAddress = string
+type TxHash = string
 
-// Technically these are both safe to be numbers, because there are 1e9 SPANK
-// in circulation, so the largest possible value for SpankPoints is 1e12, which
-// is safely below the largest integer that can be accurately represented as
-// a 64 bit float (9e15: https://stackoverflow.com/a/3793950/71522)
-// HOWEVER, we may want to switch these to BigNums to make it harder for
-// users to make mistakes with math involving them.
-type SpankAmount = number
-type SpankPoints = number
-type BootyAmount = number
+type SpankAmount = string
+type SpankPoints = string
+type BootyAmount = string
 
 type MetamaskErrorType =
   'NO_METAMASK' |
@@ -53,6 +48,14 @@ class MetamaskError extends Error {
     super(msg + ' (' + metamaskError + ')')
     this.metamaskError = metamaskError
   }
+}
+
+let sol2tsCasts = {
+  boolean: x => !!x,
+  number: x => +x,
+  TxHash: x => x,
+  BootyAmount: x => x,
+  SpankPoints: x => x,
 }
 
 abstract class SmartContractWrapper {
@@ -126,27 +129,27 @@ export class SpankBank extends SmartContractWrapper {
   }
 
   async periodLength(): Promise<number> {
-    return await this._call('periodLength')
+    return sol2tsCasts.number(await this._call('periodLength'))
   }
 
   async maxPeriods(): Promise<number> {
-    return await this._call('maxPeriods')
+    return sol2tsCasts.number(await this._call('maxPeriods'))
   }
 
   async totalSpankStaked(): Promise<number> {
-    return await this._call('totalSpankStaked')
+    return sol2tsCasts.number(await this._call('totalSpankStaked'))
   }
 
   async unwindVotes(): Promise<number> {
-    return await this._call('unwindVotes')
+    return sol2tsCasts.number(await this._call('unwindVotes'))
   }
 
   async unwindPeriod(): Promise<number> {
-    return await this._call('unwindPeriod')
+    return sol2tsCasts.number(await this._call('unwindPeriod'))
   }
 
   async currentPeriod(): Promise<number> {
-    return await this._call('currentPeriod')
+    return sol2tsCasts.number(await this._call('currentPeriod'))
   }
 
   async stake(
@@ -154,40 +157,40 @@ export class SpankBank extends SmartContractWrapper {
     stakePeriods: number,
     activityKey: EthAddress,
     bootyBase: EthAddress
-  ): Promise<void> {
-    return await this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase])
+  ): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase]))
   }
 
   async getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
-    return await this._call('getSpankPoints', [stakerAddress, period])
+    return sol2tsCasts.SpankPoints(await this._call('getSpankPoints', [stakerAddress, period]))
   }
 
   async getDidClaimBooty(stakerAddress: EthAddress, period: number): Promise<boolean> {
-    return await this._call('getDidClaimBooty', [stakerAddress, period])
+    return sol2tsCasts.boolean(await this._call('getDidClaimBooty', [stakerAddress, period]))
   }
 
-  async sendFees(bootyAmount: BootyAmount): Promise<void> {
-    return await this._call('sendFees', [bootyAmount])
+  async sendFees(bootyAmount: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('sendFees', [bootyAmount]))
   }
 
-  async mintBooty(): Promise<void> {
-    return await this._call('mintBooty')
+  async mintBooty(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('mintBooty'))
   }
 
-  async updatePeriod(): Promise<void> {
-    return await this._call('updatePeriod')
+  async updatePeriod(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updatePeriod'))
   }
 
-  async checkIn(updatedEndingPeriod: number): Promise<void> {
-    return await this._call('checkIn', [updatedEndingPeriod])
+  async checkIn(updatedEndingPeriod: number): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('checkIn', [updatedEndingPeriod]))
   }
 
-  async claimBooty(period: number): Promise<void> {
-    return await this._call('claimBooty', [period])
+  async claimBooty(period: number): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('claimBooty', [period]))
   }
 
-  async withdrawStake(): Promise<void> {
-    return await this._call('withdrawStake')
+  async withdrawStake(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('withdrawStake'))
   }
 
   async splitStake(
@@ -195,20 +198,20 @@ export class SpankBank extends SmartContractWrapper {
     newActivityKey: EthAddress,
     newBootyBase: EthAddress,
     spankAmount: SpankAmount
-  ): Promise<void> {
-    return await this._call('splitStake', [newAddress, newActivityKey, newBootyBase, spankAmount])
+  ): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('splitStake', [newAddress, newActivityKey, newBootyBase, spankAmount]))
   }
 
-  async voteToUnwind(): Promise<void> {
-    return await this._call('voteToUnwind')
+  async voteToUnwind(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('voteToUnwind'))
   }
 
-  async updateActivityKey(newActivityKey: EthAddress): Promise<void> {
-    return await this._call('updateActivityKey', [newActivityKey])
+  async updateActivityKey(newActivityKey: EthAddress): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updateActivityKey', [newActivityKey]))
   }
 
-  async updateBootyBase(newBootyBase: EthAddress): Promise<void> {
-    return await this._call('updateBootyBase', [newBootyBase])
+  async updateBootyBase(newBootyBase: EthAddress): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updateBootyBase', [newBootyBase]))
   }
 }
 
@@ -221,22 +224,22 @@ export class Token extends SmartContractWrapper {
   }
 
   async balanceOf(owner: EthAddress): Promise<BootyAmount> {
-    return await this._call('balanceOf', [owner])
+    return sol2tsCasts.BootyAmount(await this._call('balanceOf', [owner]))
   }
 
-  async transfer(to: EthAddress, value: BootyAmount): Promise<boolean> {
-    return await this._call('transfer', [to, value])
+  async transfer(to: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('transfer', [to, value]))
   }
 
-  async transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<boolean> {
-    return await this._call('transferFrom', [from, to, value])
+  async transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('transferFrom', [from, to, value]))
   }
 
-  async approve(spender: EthAddress, value: BootyAmount): Promise<boolean> {
-    return await this._call('approve', [spender, value])
+  async approve(spender: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('approve', [spender, value]))
   }
 
   async allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount> {
-    return await this._call('allowance', [owner, spender])
+    return sol2tsCasts.BootyAmount(await this._call('allowance', [owner, spender]))
   }
 }

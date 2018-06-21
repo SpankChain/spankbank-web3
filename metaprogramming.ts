@@ -4,6 +4,7 @@ import * as ts from 'typescript'
 interface MethodCall {
   name: string
   args: Array<{ name: string, type: string }>
+  returnType: string,
   call: string
 }
 
@@ -16,8 +17,11 @@ export function findSmartContractMethodDefinitions(sourceFile: ts.SourceFile, ta
       function recurse(node: ts.Node) {
         if (node.kind == ts.SyntaxKind.CallExpression && node.getText().indexOf(name) == 0) {
           let srcFileStr = node.getSourceFile().text
-          // 13 == 'return await '.length
-          call = srcFileStr.slice(node.getStart() - 13, node.getEnd())
+          let start = node.getStart()
+          while (srcFileStr.charAt(start) != '\n' && start > 0) {
+            start -= 1
+          }
+          call = srcFileStr.slice(start + 1, node.getEnd() + 1).replace(/^\s*/, '')
         }
 
         ts.forEachChild(node, recurse)
@@ -36,11 +40,15 @@ export function findSmartContractMethodDefinitions(sourceFile: ts.SourceFile, ta
         }
       })
 
+      let typeMatch = node.getText().match(/Promise<([^>]+)>/)
+      let returnType = typeMatch && typeMatch[1] || '<invalid>'
+
       let call = findFunctionCall(node, 'this._call')
 
       res.push({
         name: methodName,
         args,
+        returnType,
         call,
       })
     })
