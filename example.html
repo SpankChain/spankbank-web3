@@ -71,9 +71,8 @@
       }
 
       let FunctionCall = React.createClass({
-        inputRefs: {},
-
         componentWillMount: function() {
+          this.inputRefs = {}
           this.setState({
             values: this.props.getSet(this.props.func.name) || {},
           })
