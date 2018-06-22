@@ -1,5 +1,8 @@
 #!/usr/bin/env ts-node
 
+require('tsconfig-paths/register')
+
+
 import * as mp from './metaprogramming'
 import * as spankbank from './spankbank'
 

@@ -28,7 +28,7 @@ export declare class SpankBank extends SmartContractWrapper {
     unwindVotes(): Promise<number>;
     unwindPeriod(): Promise<number>;
     currentPeriod(): Promise<number>;
-    stake(spankAmount: SpankAmount, stakePeriods: number, activityKey: EthAddress, bootyBase: EthAddress): Promise<TxHash>;
+    stake(spankAmount: SpankAmount, stakePeriods: number, delegateKey: EthAddress, sendBootyAddress: EthAddress): Promise<TxHash>;
     getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints>;
     getDidClaimBooty(stakerAddress: EthAddress, period: number): Promise<boolean>;
     sendFees(bootyAmount: BootyAmount): Promise<TxHash>;
@@ -37,10 +37,10 @@ export declare class SpankBank extends SmartContractWrapper {
     checkIn(updatedEndingPeriod: number): Promise<TxHash>;
     claimBooty(period: number): Promise<TxHash>;
     withdrawStake(): Promise<TxHash>;
-    splitStake(newAddress: EthAddress, newActivityKey: EthAddress, newBootyBase: EthAddress, spankAmount: SpankAmount): Promise<TxHash>;
+    splitStake(newAddress: EthAddress, newDelegateKey: EthAddress, newSendBootyAddress: EthAddress, spankAmount: SpankAmount): Promise<TxHash>;
     voteToUnwind(): Promise<TxHash>;
     updateActivityKey(newActivityKey: EthAddress): Promise<TxHash>;
-    updateBootyBase(newBootyBase: EthAddress): Promise<TxHash>;
+    updateSendBootyAddress(newSendBootyAddress: EthAddress): Promise<TxHash>;
 }
 export declare class Token extends SmartContractWrapper {
     static contractAbi: any;
