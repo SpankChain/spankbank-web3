@@ -1,5 +1,7 @@
 let path = require('path')
+let webpack = require('webpack')
 let WebpackShellPlugin = require('webpack-shell-plugin')
+let findNodeModules = require('find-node-modules')
 
 
 module.exports = {
@@ -16,13 +18,18 @@ module.exports = {
   },
 
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js' ]
+    extensions: [ '.tsx', '.ts', '.js' ],
+    alias: {
+      '@contracts': path.resolve(__dirname, findNodeModules()[0], 'spankbank/build/contracts/'),
+    }
   },
 
   output: {
     filename: 'spankbank.js',
     path: path.resolve(__dirname, 'dist'),
-    library: ['spankbank'],
+    library: 'spankbank',
+    libraryTarget: 'umd',
+    globalObject: 'typeof self !== \'undefined\' ? self : this',
   },
 
   plugins: [

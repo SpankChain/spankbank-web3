@@ -1,6 +1,4 @@
-// TODO:
-// - waitForWeb3 kinda thing
-
+declare let SMART_CONTRACT_ROOT: string
 declare global {
   interface Window {
     web3: any
@@ -122,7 +120,7 @@ abstract class SmartContractWrapper {
 
 
 export class SpankBank extends SmartContractWrapper {
-  static contractAbi: any = require('./node_modules/spankbank/build/contracts/SpankBank.json').abi
+  static contractAbi: any = require('@contracts/SpankBank.json').abi
 
   getContractAbi() {
     return SpankBank.contractAbi
@@ -217,7 +215,7 @@ export class SpankBank extends SmartContractWrapper {
 
 
 export class Token extends SmartContractWrapper {
-  static contractAbi: any = require('./node_modules/spankbank/build/contracts/Token.json').abi
+  static contractAbi: any = require('@contracts/Token.json').abi
 
   getContractAbi() {
     return Token.contractAbi
