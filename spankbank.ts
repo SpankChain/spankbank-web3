@@ -7,24 +7,42 @@ declare global {
 
 // A promise that will resolve once web3 is fully loaded, including Ethereum
 // accounts.
-let web3FullyLoaded = false
-let onWeb3Load: Promise<void> = new Promise(res => {
-  let onLoad = () => {
-    window.removeEventListener('load', onLoad)
-    if (window.web3) {
-      window.web3.eth.getAccounts(() => {
-        web3FullyLoaded = true
-        res()
-      })
-    } else {
-      web3FullyLoaded = true
-      res()
-    }
+class Web3Wrapper {
+  web3FullyLoaded = false
+  onWeb3Load: Promise<any>
+  web3 = null
+  _onLoadRes: any = null
+
+  constructor() {
+    this.onWeb3Load = new Promise(res => this._onLoadRes = res)
   }
 
-  typeof window !== 'undefined' && window.addEventListener('load', onLoad)
-})
+  setWeb3(web3) {
+    this.web3 = web3
+    if (web3) {
+      web3.eth.getAccounts(() => {
+        this.web3FullyLoaded = true
+        this._onLoadRes(web3)
+      })
+    } else {
+      this.web3FullyLoaded = true
+      this._onLoadRes(web3)
+    }
+    return this
+  }
+}
 
+let windowWeb3Wrapper = new Web3Wrapper();
+
+if (typeof window == 'undefined') {
+  windowWeb3Wrapper.setWeb3(null)
+} else {
+  let onLoad = () => {
+    window.removeEventListener('load', onLoad)
+    windowWeb3Wrapper.setWeb3(window.web3)
+  }
+  window.addEventListener('load', onLoad)
+}
 
 type EthAddress = string
 type TxHash = string
@@ -56,36 +74,76 @@ let sol2tsCasts = {
   SpankPoints: x => x,
 }
 
+async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
+  let POLL_INTERVAL = 500
+  let startTime = Date.now()
+
+  while (true) {
+    if (startTime > Date.now() + (timeout * 1000))
+      throw new Error(`Timeout waiting for transaction '${txHash}' (${timeout} seconds)`)
+
+    let receipt: any = await new Promise((res, rej) => {
+      try {
+        web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
+          if (err)
+            return rej(err)
+          res(receipt)
+        })
+      } catch (e) {
+        rej(e)
+      }
+    })
+
+    if (!receipt) {
+      await new Promise(res => setTimeout(res, POLL_INTERVAL))
+      continue
+    }
+
+    return receipt
+  }
+}
+
 abstract class SmartContractWrapper {
   isLoaded: boolean = false
   hasWeb3: boolean | null = null
   loaded: Promise<void>
+  web3: any
+
+  // Web3 options to pass to smart contract calls (ex, { gas: 69696969 })
+  callOptions: any = {}
 
   contractAddress: EthAddress
 
   abstract getContractAbi(): any
 
-  constructor(contractAddress: EthAddress) {
+  constructor(contractAddress: EthAddress, web3=null) {
     this.contractAddress = contractAddress
-    this._refreshLoadingState()
-    this.loaded = onWeb3Load
-    if (!this.isLoaded)
-      this.loaded = this.loaded.then(this._refreshLoadingState)
+
+    if (!web3 && windowWeb3Wrapper.web3FullyLoaded)
+      web3 = windowWeb3Wrapper.web3
+
+    if (web3) {
+      this.web3 = web3
+      this.hasWeb3 = !!web3
+      this.isLoaded = true
+      this.loaded = Promise.resolve()
+    } else {
+      this.loaded = windowWeb3Wrapper.onWeb3Load.then(web3 => {
+        this.web3 = web3
+        this.isLoaded = true
+        this.hasWeb3 = !!web3
+      })
+    }
   }
 
-  _refreshLoadingState = () => {
-    this.isLoaded = web3FullyLoaded
-    this.hasWeb3 = web3FullyLoaded? !!window.web3 : null
-  }
-
-  async _metamaskCall(fn) {
+  async _metamaskCall(funcName, args, fn) {
     await this.loaded
 
     if (!this.hasWeb3) {
       throw new MetamaskError('NO_METAMASK', 'Web3 not found.')
     }
 
-    if (!(window.web3.currentProvider && window.web3.eth.defaultAccount)) {
+    if (!(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
       throw new MetamaskError('NOT_SIGNED_IN', 'Web3 is not signed in')
     }
 
@@ -93,7 +151,7 @@ abstract class SmartContractWrapper {
       // Call async metamask API function
       //  -- metamask expects a callback with parameters (error, value)
       fn((err, val) => {
-        console.log('metamask result:', err, val)
+        console.log(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
         if (err) {
           if (/User denied transaction signature/.exec('' + err)) {
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
@@ -107,14 +165,18 @@ abstract class SmartContractWrapper {
 
   async _call(contractFuncName, args?): Promise<any> {
     args = args || []
-    return await this._metamaskCall(cb => {
-      console.log(this.contractAddress, contractFuncName, args)
-      window.web3
+    return await this._metamaskCall(contractFuncName, args, cb => {
+      this.web3
         .eth
         .contract(this.getContractAbi())
         .at(this.contractAddress)
-        [contractFuncName](...args, cb)
+        [contractFuncName](...args, this.callOptions, cb)
     })
+  }
+
+  async waitForTransactionReceipt(tx: string, timeout: number = 120): Promise<any> {
+    await this.loaded
+    return await waitForTransactionReceipt(this.web3, tx, timeout)
   }
 }
 
@@ -153,10 +215,10 @@ export class SpankBank extends SmartContractWrapper {
   async stake(
     spankAmount: SpankAmount,
     stakePeriods: number,
-    activityKey: EthAddress,
+    delegateKey: EthAddress,
     bootyBase: EthAddress
   ): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase]))
+    return sol2tsCasts.TxHash(await this._call('stake', [spankAmount, stakePeriods, delegateKey, bootyBase]))
   }
 
   async getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
@@ -193,19 +255,19 @@ export class SpankBank extends SmartContractWrapper {
 
   async splitStake(
     newAddress: EthAddress,
-    newActivityKey: EthAddress,
+    newDelegateKey: EthAddress,
     newBootyBase: EthAddress,
     spankAmount: SpankAmount
   ): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('splitStake', [newAddress, newActivityKey, newBootyBase, spankAmount]))
+    return sol2tsCasts.TxHash(await this._call('splitStake', [newAddress, newDelegateKey, newBootyBase, spankAmount]))
   }
 
   async voteToUnwind(): Promise<TxHash> {
     return sol2tsCasts.TxHash(await this._call('voteToUnwind'))
   }
 
-  async updateActivityKey(newActivityKey: EthAddress): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('updateActivityKey', [newActivityKey]))
+  async updateActivityKey(newDelegateKey: EthAddress): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updateActivityKey', [newDelegateKey]))
   }
 
   async updateSendBootyAddress(newSendBootyAddress: EthAddress): Promise<TxHash> {

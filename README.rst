@@ -25,8 +25,10 @@ Using ``spankbank`` in Your App
     let spankToken = new Token('0x374f46dc892ecdc9db8bc704175f0485e5185851')
     spankToken
       .approve('0xaad6cdac26aed0894d55bfaf2d3252c6084f5fc4', 69)
-      .then(txHash => {
+      .then(async txHash => {
         console.log('Approval transaction:', txHash)
+        let receipt = await spankbank.waitForTransactionReceipt(txHash)
+        console.log('Receipt:', receipt)
       })
 
 
@@ -42,6 +44,28 @@ And be sure to re-build before pushing::
 
     $ npm run build
 
+
+Testing
+=======
+
+To setup the test environment:
+
+1. Ensure that ``ganache`` (testrpc) is running::
+
+    $ npm install -g ganache-cli
+    $ ganache-cli --gas 1
+
+2. Run the tests::
+
+    $ npm run test
+
+Note: the tests use (essentially)::
+
+    $ cd node_modules/spankbank/
+    $ yarn
+    $ truffle deploy --reset
+
+Before each test to deploy the smart contract.
 
 API Overview
 ============

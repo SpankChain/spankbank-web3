@@ -27,7 +27,8 @@
     }
   },
   "include": [
-    "spankbank.ts"
+    "spankbank.ts",
+    "tests/*.ts"
   ],
   "exclude": [
     "node_modules/**"

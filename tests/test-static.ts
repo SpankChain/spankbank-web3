@@ -1,11 +1,7 @@
-#!/usr/bin/env ts-node
+import * as chai from 'chai'
 
-require('tsconfig-paths/register')
-
-
-import * as mp from './metaprogramming'
-import * as spankbank from './spankbank'
-
+import * as mp from '../metaprogramming'
+import * as spankbank from '../spankbank'
 
 function getExpectedMethodsFromContractAbi(abi): any[] {
   let expectedMethods: any[] = []
@@ -101,16 +97,15 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
   return !!(mismatchedMethods.length || mismatchedCalls.length)
 }
 
-let hasErr = false
 let sourceFile = mp.loadSourceFile('./spankbank.ts')
 
-for (let className of ['SpankBank', 'Token']) {
-  console.log(`Checking ${className}...`)
-  let res = checkSmartContract(sourceFile, className, spankbank[className].contractAbi)
-  hasErr = hasErr || res
-  if (res)
-    console.log()
-}
+describe('Static analysis:', () => {
+  for (let className of ['SpankBank', 'Token']) {
+    it(className + ': matches the ABI', () => {
+      let res = checkSmartContract(sourceFile, className, spankbank[className].contractAbi)
+      if (res)
+        chai.assert.fail(res)
+    })
+  }
+})
 
-console.log(hasErr ? 'Errors were found!' : 'Looks good!')
-process.exit(hasErr ? 1 : 0)
