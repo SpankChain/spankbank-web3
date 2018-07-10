@@ -12,7 +12,7 @@
   "devDependencies": {
     "@types/node": "^10.3.4",
     "find-node-modules": "^1.0.4",
-    "spankbank": "git+ssh://git@github.com:SpankChain/spankbank.git#7fc2f993e4c2b925bab959ff4a1b542f0e5c4a08",
+    "spankbank": "git+ssh://git@github.com:SpankChain/spankbank.git#0cb2824b6009fd144b9aab21fd37f74b93a0ce05",
     "ts-loader": "^4.4.1",
     "ts-node": "^6.1.2",
     "tsc-watch": "^1.0.22",

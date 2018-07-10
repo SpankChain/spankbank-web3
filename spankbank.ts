@@ -153,10 +153,10 @@ export class SpankBank extends SmartContractWrapper {
   async stake(
     spankAmount: SpankAmount,
     stakePeriods: number,
-    delegateKey: EthAddress,
-    sendBootyAddress: EthAddress
+    activityKey: EthAddress,
+    bootyBase: EthAddress
   ): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('stake', [spankAmount, stakePeriods, delegateKey, sendBootyAddress]))
+    return sol2tsCasts.TxHash(await this._call('stake', [spankAmount, stakePeriods, activityKey, bootyBase]))
   }
 
   async getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints> {
@@ -193,11 +193,11 @@ export class SpankBank extends SmartContractWrapper {
 
   async splitStake(
     newAddress: EthAddress,
-    newDelegateKey: EthAddress,
-    newSendBootyAddress: EthAddress,
+    newActivityKey: EthAddress,
+    newBootyBase: EthAddress,
     spankAmount: SpankAmount
   ): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('splitStake', [newAddress, newDelegateKey, newSendBootyAddress, spankAmount]))
+    return sol2tsCasts.TxHash(await this._call('splitStake', [newAddress, newActivityKey, newBootyBase, spankAmount]))
   }
 
   async voteToUnwind(): Promise<TxHash> {
