@@ -3,15 +3,47 @@ import * as chai from 'chai'
 import * as mp from '../metaprogramming'
 import * as spankbank from '../spankbank'
 
+let methodReturnStructs = {
+  'getPeriod': 'Period',
+  'getStaker': 'Staker',
+}
+
+let ignoreMethods = {
+  'stakers': true,
+  'periods': true,
+}
+
+function findStructName(methodName) {
+  let name = methodReturnStructs[methodName]
+  if (!name) {
+    console.error(`No return type name for method: ${methodName} (see 'methodReturnStructs')`)
+    return '<unknown>'
+  }
+
+  return name
+}
+
 function getExpectedMethodsFromContractAbi(abi): any[] {
   let expectedMethods: any[] = []
   abi.forEach(method => {
     if (method.type !== 'function')
       return
 
+    if (ignoreMethods[method.name])
+      return
+
+    if (method.inputs.length && method.inputs[0].name == '')
+      method.inputs[0].name = 'key'
+
+    let returnType = (
+      method.outputs.length == 0 ? 'TxHash' :
+      method.outputs.length == 1 ? method.outputs[0].type :
+      findStructName(method.name)
+    )
+
     expectedMethods.push({
       name: method.name,
-      returnType: method.outputs[0] && method.outputs[0].type,
+      returnType,
       args: method.inputs.map(arg => ({
         ...arg,
         name: arg.name.replace(/^_*/, ''),
@@ -27,7 +59,26 @@ function tsArgTypeToSolType(type) {
     EthAddress: 'address',
     SpankAmount: 'uint256',
     BootyAmount: 'uint256',
+    Buffer: 'bytes',
   }[type] || type
+}
+
+function solArgTypeToTsType(type) {
+  return {
+    'uint256': 'number',
+    'address': 'EthAddress',
+    'void': 'TxHash',
+    'bool': 'boolean',
+    'bytes': 'Buffer',
+  }[type] || type
+}
+
+function methodToExpectedCall(m) {
+  let expectedArgs = (
+    m.args.length == 0 ? '' :
+    `, [${m.args.map(a => a.name).join(', ')}]`
+  )
+  return `return sol2tsCasts.${solArgTypeToTsType(m.returnType)}(await this._call('${m.name}'${expectedArgs}))`
 }
 
 function checkSmartContract(sourceFile, className: string, abi: any): boolean {
@@ -36,11 +87,7 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
   // Check that each method correctly calls `return await this._call('name', [args])`
   let mismatchedCalls: any[] = []
   definedMethods.forEach(m => {
-    let expectedArgs = (
-      m.args.length == 0 ? '' :
-      `, [${m.args.map(a => a.name).join(', ')}]`
-    )
-    let expectedCall = `return sol2tsCasts.${m.returnType}(await this._call('${m.name}'${expectedArgs}))`
+    let expectedCall = methodToExpectedCall(m)
     if (expectedCall != m.call) {
       mismatchedCalls.push({
         method: m,
@@ -58,7 +105,7 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
 
   // Check that, for each method defined on the class, it matches the
   // corresponding method on the smart contract.
-  let expectedMethods = getExpectedMethodsFromContractAbi(spankbank.SpankBank.contractAbi)
+  let expectedMethods = getExpectedMethodsFromContractAbi(abi)
   let missingMethods: any[] = []
   let mismatchedMethods: any[] = []
   expectedMethods.forEach(method => {
@@ -88,13 +135,25 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
     }
   })
 
+  if (missingMethods.length > 0)
+    console.error(`${className}: ${missingMethods.length} missing methods`)
+
+  missingMethods.forEach(m => {
+    let expectedCall = methodToExpectedCall(m)
+    let expectedArgs = m.args.map(a => `${a.name}: ${solArgTypeToTsType(a.type)}`).join(', ')
+    console.error(`  async ${m.name}(${expectedArgs}): Promise<${solArgTypeToTsType(m.returnType)}> {`)
+    console.error(`    ${expectedCall}`)
+    console.error(`  }`)
+    console.error('')
+  })
+
   mismatchedMethods.forEach(m => {
     console.error(className + '.' + m.expected.name + ': argument mismatch!')
     console.error('  Expected:', m.expected.args.map(arg => arg.name + ': ' + arg.type).join(', '))
     console.error('    Actual:', m.actual.args.map(arg => arg.name + ': ' + tsArgTypeToSolType(arg.type)).join(', '))
   })
 
-  return !!(mismatchedMethods.length || mismatchedCalls.length)
+  return !!(mismatchedMethods.length || mismatchedCalls.length || missingMethods.length)
 }
 
 let sourceFile = mp.loadSourceFile('./spankbank.ts')

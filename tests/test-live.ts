@@ -42,7 +42,7 @@ function runCommand(opts, cmd, ...args): Promise<string> {
 
   proc.on('close', (code) => {
     if (code)
-      return reject(`'${cmd} ${args.join(' ')}' exited with status '${code}'`)
+      return reject(new Error(`'${cmd} ${args.join(' ')}' exited with status '${code}'`))
     resolve(allStdout)
   })
 
@@ -58,6 +58,19 @@ describe('SpankBank: live tests', () => {
   let token: Token
   let sb: SpankBank
   let resetAfterTest = true
+
+  async function goNextPeriod() {
+    let periodLength = await sb.periodLength()
+
+    await new Promise((res, rej) => web3.currentProvider.sendAsync({
+      id: 69,
+      jsonrpc: "2.0",
+      method: "evm_increaseTime",
+      params: [periodLength + 100],
+    }, (err, result) => err ? rej(err) : res(result)))
+    
+    let tx = await sb.updatePeriod()
+  }
 
   beforeEach(async () => {
     if (!resetAfterTest)
@@ -86,7 +99,7 @@ describe('SpankBank: live tests', () => {
     resetAfterTest = true
   })
 
-  it('should get period length', async () => {
+  it('periodLength()', async () => {
     resetAfterTest = false
     assert.equal(2592000, await sb.periodLength())
   })
@@ -100,11 +113,54 @@ describe('SpankBank: live tests', () => {
 
   it('should be able to stake', async () => {
     resetAfterTest = true
+
+    assert.equal(0, await sb.currentPeriod())
+
+    await goNextPeriod()
+    assert.equal(1, await sb.currentPeriod())
+
     await token.approve(sb.contractAddress, '100')
     await sb.stake('100', 12, web3.eth.defaultAccount, web3.eth.defaultAccount)
 
     let totalSpankStaked = await token.balanceOf(sb.contractAddress)
     assert.equal(totalSpankStaked, 100)
+
+    await goNextPeriod()
+    assert.equal(2, await sb.currentPeriod())
+
+    await sb.checkIn(0)
+
+    await goNextPeriod()
+    await sb.mintBooty()
+
+    assert.containSubset(await sb.getPeriod(1), {
+      bootyFees: '0',
+      totalSpankPoints: '0',
+      bootyMinted: '0',
+      mintingComplete: false,
+    })
+
+    assert.containSubset(await sb.getPeriod(2), {
+      bootyFees: '0',
+      totalSpankPoints: '100',
+      bootyMinted: '0',
+      mintingComplete: true,
+    })
+
+    assert.containSubset(await sb.getPeriod(3), {
+      bootyFees: '0',
+      totalSpankPoints: '95',
+      bootyMinted: '0',
+      mintingComplete: false,
+    })
+
+    assert.deepEqual(await sb.getStaker(web3.eth.defaultAccount), {
+      spankStaked: '100',
+      startingPeriod: 2,
+      endingPeriod: 13,
+      delegateKey: web3.eth.defaultAccount,
+      bootyBase: web3.eth.defaultAccount,
+    })
   })
 
 })

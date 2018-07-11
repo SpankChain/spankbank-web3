@@ -72,6 +72,22 @@ let sol2tsCasts = {
   TxHash: x => x,
   BootyAmount: x => x,
   SpankPoints: x => x,
+  EthAddress: x => x,
+  Period: (x): Period => ({
+    bootyFees: x[0].toFixed(),
+    totalSpankPoints: x[1].toFixed(),
+    bootyMinted: x[2].toFixed(),
+    mintingComplete: !!x[3],
+    startTime: x[4].toNumber(),
+    endTime: x[5].toNumber(),
+  }),
+  Staker: (x): Staker => ({
+    spankStaked: x[0].toFixed(),
+    startingPeriod: x[1].toNumber(),
+    endingPeriod: x[2].toNumber(),
+    delegateKey: x[3],
+    bootyBase: x[4],
+  }),
 }
 
 async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
@@ -181,6 +197,23 @@ abstract class SmartContractWrapper {
 }
 
 
+interface Period {
+  bootyFees: BootyAmount // the amount of BOOTY collected in fees
+  totalSpankPoints: SpankPoints // the total spankPoints of all stakers
+  bootyMinted: BootyAmount // the amount of BOOTY minted
+  mintingComplete: boolean // true if BOOTY has already been minted for this period
+  startTime: number // the starting unix timestamp in seconds
+  endTime: number // the ending unix timestamp in seconds
+}
+
+interface Staker {
+  spankStaked: SpankAmount // the amount of spank staked
+  startingPeriod: number // the period this staker started staking
+  endingPeriod: number // the period after which this stake expires
+  delegateKey: EthAddress
+  bootyBase: EthAddress
+}
+
 export class SpankBank extends SmartContractWrapper {
   static contractAbi: any = require('@contracts/SpankBank.json').abi
 
@@ -273,6 +306,63 @@ export class SpankBank extends SmartContractWrapper {
   async updateSendBootyAddress(newSendBootyAddress: EthAddress): Promise<TxHash> {
     return sol2tsCasts.TxHash(await this._call('updateSendBootyAddress', [newSendBootyAddress]))
   }
+
+  async updateBootyBase(newBootyBase: EthAddress): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updateBootyBase', [newBootyBase]))
+  }
+
+  async closingVotes(): Promise<number> {
+    return sol2tsCasts.number(await this._call('closingVotes'))
+  }
+
+  async bootyToken(): Promise<EthAddress> {
+    return sol2tsCasts.EthAddress(await this._call('bootyToken'))
+  }
+
+  async spankToken(): Promise<EthAddress> {
+    return sol2tsCasts.EthAddress(await this._call('spankToken'))
+  }
+
+  async isClosed(): Promise<boolean> {
+    return sol2tsCasts.boolean(await this._call('isClosed'))
+  }
+
+  async closingPeriod(): Promise<number> {
+    return sol2tsCasts.number(await this._call('closingPeriod'))
+  }
+
+  async delegateKeys(key: EthAddress): Promise<EthAddress> {
+    return sol2tsCasts.EthAddress(await this._call('delegateKeys', [key]))
+  }
+
+  async receiveApproval(from: EthAddress, amount: number, tokenContract: EthAddress, extraData: Buffer): Promise<boolean> {
+    return sol2tsCasts.boolean(await this._call('receiveApproval', [from, amount, tokenContract, extraData]))
+  }
+
+  async getVote(stakerAddress: EthAddress, period: number): Promise<boolean> {
+    return sol2tsCasts.boolean(await this._call('getVote', [stakerAddress, period]))
+  }
+
+  async getPeriod(period: number): Promise<Period> {
+    return sol2tsCasts.Period(await this._call('getPeriod', [period]))
+  }
+
+  async getStaker(stakerAddress: EthAddress): Promise<Staker> {
+    return sol2tsCasts.Staker(await this._call('getStaker', [stakerAddress]))
+  }
+
+  async getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress> {
+    return sol2tsCasts.EthAddress(await this._call('getStakerFromDelegateKey', [delegateAddress]))
+  }
+
+  async voteToClose(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('voteToClose'))
+  }
+
+  async updateDelegateKey(newDelegateKey: EthAddress): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('updateDelegateKey', [newDelegateKey]))
+  }
+  
 }
 
 
@@ -301,5 +391,9 @@ export class Token extends SmartContractWrapper {
 
   async allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount> {
     return sol2tsCasts.BootyAmount(await this._call('allowance', [owner, spender]))
+  }
+
+  async totalSupply(): Promise<number> {
+    return sol2tsCasts.number(await this._call('totalSupply'))
   }
 }
