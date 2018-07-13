@@ -90,7 +90,7 @@ let sol2tsCasts = {
   }),
 }
 
-async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
+export async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
   let POLL_INTERVAL = 500
   let startTime = Date.now()
 
