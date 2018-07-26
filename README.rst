@@ -32,6 +32,45 @@ Using ``spankbank`` in Your App
       })
 
 
+Using with the Ledger Nano
+==========================
+
+To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
+
+    let web3Wrapper = new LedgerWeb3Wrapper({
+      // These parameters are optional. If they are not provided, Metamask
+      // will be queried for the networkId, and the corresponding Infura
+      // RPC endpoint will be used.
+      networkId: 1,
+      rpcUrl: 'https://mainnet.infura.io/metamask',
+    }}
+
+    // Wait for the ledger to load.
+    // This may throw a MetamaskError with ``metamaskError == 'LEDGER_LOCKED'``
+    // if the ledger is unplugged, locked, or the Ethereum app hasn't been
+    // started. Unfortuantely there doesn't seem to be a better way to
+    // distinguish between these cases.
+    try {
+      await web3Wrapper.ready
+    } catch (e) {
+      if (e.metamaskError == 'LEDGER_LOCKED') {
+        console.log('The ledger is unplugged, locked, or the Ethereum app is not running')
+      } else if (e.metamaskError == 'LEDGER_NOT_SUPPORTED') {
+        // The error message describes the issue
+        console.log(e.message)
+      }
+      throw e
+    }
+
+    let sb = new SpankBank('0xaad6cdac26aed0894d55bfaf2d3252c6084f5fc4', web3Wrapper)
+
+Note: HTTPS must be used even when developing locally. The simplest way to
+do that is with ``ngrok`` (https://ngrok.com/)::
+
+    $ ngrok http 6933
+    ...
+    Forwarding                    https://db0a61c0.ngrok.io -> localhost:6933                                          
+
 Developing
 ==========
 

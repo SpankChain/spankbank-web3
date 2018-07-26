@@ -28,5 +28,10 @@
     "webpack-cli": "^3.0.8",
     "webpack-dev-server": "^3.1.4",
     "webpack-shell-plugin": "^0.5.0"
+  },
+  "dependencies": {
+    "ledger-wallet-provider": "^2.0.1-beta.3",
+    "string_decoder": "^1.1.1",
+    "web3-provider-engine": "^14.0.6"
   }
 }

@@ -161,7 +161,7 @@
 
         render: function() {
           let s = this.state
-          let sc = new spankbank[this.props.className](s.form.contractAddress)
+          let sc = new spankbank[this.props.className](s.form.contractAddress, window.ledgerWeb3)
 
           if (!sc.isLoaded) {
             sc.loaded.then(() => {
@@ -226,6 +226,8 @@
           </div>)
         }
       })
+      
+      window.ledgerWeb3 = new spankbank.LedgerWeb3Wrapper()
 
       ReactDOM.render(
         <SpankBankWeb3Example />,

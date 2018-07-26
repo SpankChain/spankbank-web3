@@ -30,6 +30,10 @@ class Web3Wrapper {
     }
     return this
   }
+
+  then(...args) {
+    return this.onWeb3Load.then(...args)
+  }
 }
 
 let windowWeb3Wrapper = new Web3Wrapper();
@@ -44,6 +48,102 @@ if (typeof window == 'undefined') {
   window.addEventListener('load', onLoad)
 }
 
+function p(host, method, ...args): Promise<any> {
+  return new Promise((res, rej) => {
+    host[method](...args, (err, result) => {
+      err ? rej(err) : res(result)
+    })
+  })
+}
+
+let networkDefaultRpcUrls = {
+  1: 'https://mainnet.infura.io/metamask',
+  2: 'https://morden.infura.io/metamask',
+  3: 'https://ropsten.infura.io/metamask',
+  4: 'https://rinkeby.infura.io/metamask',
+  42: 'https://kovan.infura.io/metamask',
+}
+
+interface LedgerWeb3WrapperOpts {
+  networkId?: string | number
+  rpcUrl?: string
+}
+
+export class LedgerWeb3Wrapper {
+  web3FullyLoaded = false
+  engine: any
+  web3: any
+  provider: any
+  ready: Promise<any>
+  isSupported: boolean
+
+  constructor(_opts?: LedgerWeb3WrapperOpts) {
+    let opts = _opts || {}
+
+    var Web3 = require('web3')
+    var ProviderEngine = require('web3-provider-engine')
+
+    this.engine = new ProviderEngine()
+    this.web3 = new Web3(this.engine)
+    this.web3._isLedger = true
+
+    this.ready = this._init(opts)
+      ['catch'](err => {
+        if (/Sign failed/.exec('' + err) && this.web3._isLedger)
+          throw new MetamaskError('LEDGER_LOCKED', 'Ledger is unplugged, locked, or the Ethereum app is not running.')
+        throw err
+      })
+      ['finally'](() => this.web3FullyLoaded = true)
+  }
+
+  async _init(opts: LedgerWeb3WrapperOpts) {
+    var LedgerWalletSubproviderFactory = require('ledger-wallet-provider').default
+    var RpcSubprovider = require('web3-provider-engine/subproviders/rpc')
+
+    if (!opts.networkId) {
+      let windowWeb3 = await windowWeb3Wrapper.onWeb3Load
+      if (!windowWeb3)
+        throw new Error('Web3 not found and no networkId provided to LedgerWeb3Wrapper')
+      opts.networkId = await p(windowWeb3.version, 'getNetwork')
+    }
+
+    if (!opts.rpcUrl) {
+      let windowWeb3 = await windowWeb3Wrapper.onWeb3Load
+      if (!windowWeb3)
+        throw new Error('Web3 not found and no rpcUrl provided to LedgerWeb3Wrapper')
+      opts.rpcUrl = networkDefaultRpcUrls[opts.networkId!]
+      if (!opts.rpcUrl)
+        throw new Error('No default RPC URL for network "' + opts.networkId + '"; one must be provided.')
+    }
+
+    this.provider = await LedgerWalletSubproviderFactory(() => opts.networkId)
+    this.isSupported = this.provider.isSupported
+    if (!this.isSupported) {
+      throw new MetamaskError('LEDGER_NOT_SUPPORTED', (
+        'LedgerWallet uses U2F which is not supported by your browser. ' +
+        'Use Chrome, Opera or Firefox with a U2F extension.' +
+        'Also make sure you\'re on an HTTPS connection.'
+      ))
+    }
+
+    this.engine.addProvider(this.provider)
+    this.engine.addProvider(new RpcSubprovider({ rpcUrl: opts.rpcUrl}))
+    this.engine.start()
+
+    let accounts = await p(this.web3.eth, 'getAccounts')
+
+    this.web3.eth.defaultAccount = accounts[0]
+    console.log('Using Ledger address:', accounts[0], 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
+    
+    return this.web3
+  }
+
+  then(...args) {
+    return this.ready.then(...args)
+  }
+}
+
+
 type EthAddress = string
 type TxHash = string
 
@@ -55,14 +155,19 @@ type MetamaskErrorType =
   'NO_METAMASK' |
   'NOT_SIGNED_IN' |
   'REJECTED_SIGNATURE' |
+  'METAMASK_ERROR' | // For Metamask errors with codes (ex, -32000 = insufficient funds)
+  'LEDGER_LOCKED' | // Error when the Ledger is likely locked
+  'LEDGER_NOT_SUPPORTED' | // u2f isn't supported
   'UNKNOWN_ERROR'
 
 class MetamaskError extends Error {
   metamaskError: MetamaskErrorType
+  code: number | null // Metamask error code, or null if the code is unknown
 
-  constructor(metamaskError: MetamaskErrorType, msg) {
+  constructor(metamaskError: MetamaskErrorType, msg, code=null) {
     super(msg + ' (' + metamaskError + ')')
     this.metamaskError = metamaskError
+    this.code = code
   }
 }
 
@@ -89,6 +194,7 @@ let sol2tsCasts = {
     bootyBase: x[4],
   }),
 }
+
 
 export async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
   let POLL_INTERVAL = 500
@@ -132,23 +238,25 @@ abstract class SmartContractWrapper {
 
   abstract getContractAbi(): any
 
-  constructor(contractAddress: EthAddress, web3=null) {
+  constructor(contractAddress: EthAddress, web3OrWrapper: any = null) {
     this.contractAddress = contractAddress
 
-    if (!web3 && windowWeb3Wrapper.web3FullyLoaded)
-      web3 = windowWeb3Wrapper.web3
+    web3OrWrapper = web3OrWrapper || windowWeb3Wrapper
 
-    if (web3) {
-      this.web3 = web3
-      this.hasWeb3 = !!web3
-      this.isLoaded = true
-      this.loaded = Promise.resolve()
-    } else {
-      this.loaded = windowWeb3Wrapper.onWeb3Load.then(web3 => {
+    if (web3OrWrapper && web3OrWrapper.web3FullyLoaded)
+      web3OrWrapper = web3OrWrapper.web3
+
+    if (web3OrWrapper && web3OrWrapper.then) {
+      this.loaded = web3OrWrapper.then(web3 => {
         this.web3 = web3
         this.isLoaded = true
         this.hasWeb3 = !!web3
       })
+    } else {
+      this.web3 = web3OrWrapper
+      this.hasWeb3 = !!web3OrWrapper
+      this.isLoaded = true
+      this.loaded = Promise.resolve()
     }
   }
 
@@ -169,9 +277,15 @@ abstract class SmartContractWrapper {
       fn((err, val) => {
         console.log(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
         if (err) {
-          if (/User denied transaction signature/.exec('' + err)) {
+          if (/User denied transaction signature/.exec('' + err))
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
-          }
+
+          if (/Sign failed/.exec('' + err) && this.web3._isLedger)
+            return reject(new MetamaskError('LEDGER_LOCKED', 'Ledger is unplugged, locked, or the Ethereum app is not running.'))
+
+          if (err && err.code && err.message)
+            return reject(new MetamaskError('METAMASK_ERROR', err.message, err.code))
+
           return reject(new MetamaskError('UNKNOWN_ERROR', '' + err))
         }
         return resolve(val)
