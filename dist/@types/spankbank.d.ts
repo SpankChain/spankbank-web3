@@ -4,6 +4,21 @@ declare global {
         web3: any;
     }
 }
+interface LedgerWeb3WrapperOpts {
+    networkId?: string | number;
+    rpcUrl?: string;
+}
+export declare class LedgerWeb3Wrapper {
+    web3FullyLoaded: boolean;
+    engine: any;
+    web3: any;
+    provider: any;
+    ready: Promise<any>;
+    isSupported: boolean;
+    constructor(_opts?: LedgerWeb3WrapperOpts);
+    _init(opts: LedgerWeb3WrapperOpts): Promise<any>;
+    then(...args: any[]): Promise<any>;
+}
 declare type EthAddress = string;
 declare type TxHash = string;
 declare type SpankAmount = string;
@@ -18,7 +33,7 @@ declare abstract class SmartContractWrapper {
     callOptions: any;
     contractAddress: EthAddress;
     abstract getContractAbi(): any;
-    constructor(contractAddress: EthAddress, web3?: null);
+    constructor(contractAddress: EthAddress, web3OrWrapper?: any);
     _metamaskCall(funcName: any, args: any, fn: any): Promise<{}>;
     _call(contractFuncName: any, args?: any): Promise<any>;
     waitForTransactionReceipt(tx: string, timeout?: number): Promise<any>;
