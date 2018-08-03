@@ -298,11 +298,16 @@ abstract class SmartContractWrapper {
   async _call(contractFuncName, args?): Promise<any> {
     args = args || []
     return await this._metamaskCall(contractFuncName, args, cb => {
-      this.web3
-        .eth
-        .contract(this.getContractAbi())
-        .at(this.contractAddress)
-        [contractFuncName](...args, this.callOptions, cb)
+      this.web3.getGasPrice((_error, gasPrice) => {
+        const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
+
+        // Automatically set the gas limit and gas price
+        // Can be overriden by callOptions
+        const gasLimit = contract[contractFuncName].estimateGas(...args)
+        const options = { gas: gasLimit, gasPrice, ...this.callOptions }
+
+        contract[contractFuncName](...args, options, cb)
+      })
     })
   }
 
