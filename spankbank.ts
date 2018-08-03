@@ -305,7 +305,7 @@ abstract class SmartContractWrapper {
           // Automatically set the gas limit and gas price
           // Can be overriden by callOptions
           const options = { gas, gasPrice, ...this.callOptions }
-          contract[contractFuncName].call(...args, options, cb)
+          contract[contractFuncName](...args, options, cb)
         })
       })
     })
