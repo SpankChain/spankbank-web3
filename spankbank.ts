@@ -75,7 +75,7 @@ export class LedgerWeb3Wrapper {
   web3: any
   provider: any
   ready: Promise<any>
-  isSupported: boolean
+  isU2FSupported: boolean
 
   constructor(_opts?: LedgerWeb3WrapperOpts) {
     let opts = _opts || {}
@@ -97,7 +97,8 @@ export class LedgerWeb3Wrapper {
   }
 
   async _init(opts: LedgerWeb3WrapperOpts) {
-    var LedgerWalletSubproviderFactory = require('ledger-wallet-provider').default
+    let TransportU2F = require('@ledgerhq/hw-transport-u2f').default
+    var LedgerWalletSubproviderFactory = require('@ledgerhq/web3-subprovider').default
     var RpcSubprovider = require('web3-provider-engine/subproviders/rpc')
 
     if (!opts.networkId) {
@@ -116,15 +117,16 @@ export class LedgerWeb3Wrapper {
         throw new Error('No default RPC URL for network "' + opts.networkId + '"; one must be provided.')
     }
 
-    this.provider = await LedgerWalletSubproviderFactory(() => opts.networkId)
-    this.isSupported = this.provider.isSupported
-    if (!this.isSupported) {
+    this.isU2FSupported = await TransportU2F.isSupported()
+    if (!this.isU2FSupported) {
       throw new MetamaskError('LEDGER_NOT_SUPPORTED', (
         'LedgerWallet uses U2F which is not supported by your browser. ' +
         'Use Chrome, Opera or Firefox with a U2F extension.' +
-        'Also make sure you\'re on an HTTPS connection.'
+        'Also, make sure you\'re using an HTTPS connection.'
       ))
     }
+
+    this.provider = await LedgerWalletSubproviderFactory(() => TransportU2F.create(), opts)
 
     this.engine.addProvider(this.provider)
     this.engine.addProvider(new RpcSubprovider({ rpcUrl: opts.rpcUrl}))
