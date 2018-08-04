@@ -37,7 +37,7 @@ Using with the Ledger Nano
 
 To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
 
-    let web3Wrapper = new LedgerWeb3Wrapper({
+    let ledgerWrapper = new LedgerWeb3Wrapper({
       // These parameters are optional. If they are not provided, Metamask
       // will be queried for the networkId, and the corresponding Infura
       // RPC endpoint will be used.
@@ -50,19 +50,22 @@ To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
     // if the ledger is unplugged, locked, or the Ethereum app hasn't been
     // started. Unfortuantely there doesn't seem to be a better way to
     // distinguish between these cases.
-    try {
-      await web3Wrapper.ready
-    } catch (e) {
-      if (e.metamaskError == 'LEDGER_LOCKED') {
-        console.log('The ledger is unplugged, locked, or the Ethereum app is not running')
-      } else if (e.metamaskError == 'LEDGER_NOT_SUPPORTED') {
-        // The error message describes the issue
-        console.log(e.message)
+    // Additionally, it will take 7 seconds to fail with ``LEDGER_LOCKED``.
+    // See comments above ``transport.exchangeTimeout`` in ``spankbank.ts``.
+    ledgerWrapper.then(
+      () => console.log('Ledger ready!'),
+      err => {
+        if (err.metamaskError == 'LEDGER_NOT_SUPPORTED') {
+          // The error message will describe the issue
+          console.log(err.message)
+        } else if (err.metamaskError == 'LEDGER_LOCKED') {
+          console.log('The ledger is unplugged, locked, or the Ethereum app is not running')
+        } else {
+          console.log('Error connecting to ledger:', err)
       }
-      throw e
-    }
+    )
 
-    let sb = new SpankBank('0xaad6cdac26aed0894d55bfaf2d3252c6084f5fc4', web3Wrapper)
+    let sb = new SpankBank('0xaad6cdac26aed0894d55bfaf2d3252c6084f5fc4', ledgerWrapper)
 
 Note: HTTPS must be used even when developing locally. The simplest way to
 do that is with ``ngrok`` (https://ngrok.com/)::

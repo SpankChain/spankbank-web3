@@ -75,7 +75,8 @@ export class LedgerWeb3Wrapper {
   web3: any
   provider: any
   ready: Promise<any>
-  isU2FSupported: boolean
+  isU2FSupported?: boolean
+  isLedgerPresent?: boolean
 
   constructor(_opts?: LedgerWeb3WrapperOpts) {
     let opts = _opts || {}
@@ -88,9 +89,15 @@ export class LedgerWeb3Wrapper {
     this.web3._isLedger = true
 
     this.ready = this._init(opts)
+      ['then'](res => {
+        this.isLedgerPresent = true
+        return res
+      })
       ['catch'](err => {
-        if (/Sign failed/.exec('' + err) && this.web3._isLedger)
-          throw new MetamaskError('LEDGER_LOCKED', 'Ledger is unplugged, locked, or the Ethereum app is not running.')
+        this.isLedgerPresent = false
+        if (/Failed to sign/.exec('' + err) && this.web3._isLedger)
+          err = new MetamaskError('LEDGER_LOCKED', 'Ledger is unplugged, locked, or the Ethereum app is not running.')
+        this.web3 = null
         throw err
       })
       ['finally'](() => this.web3FullyLoaded = true)
@@ -126,7 +133,31 @@ export class LedgerWeb3Wrapper {
       ))
     }
 
-    this.provider = await LedgerWalletSubproviderFactory(() => TransportU2F.create(), opts)
+    this.provider = await LedgerWalletSubproviderFactory(async () => {
+      let transport = await TransportU2F.create(1000, 1000)
+
+      // Hard-code a 7 second timeout before giving up and deciding that no
+      // ledger is attached. This number is number is somewhat arbitrary: a
+      // timeout less than 5 seconds will sometimes fail to detect an attached
+      // ledger, and 2 extra seconds are added for safety.
+      transport.exchangeTimeout = 7000
+
+      // There's a bug in `transport.close` where it throws an error if it has
+      // already been removed from a list of "active transports". Work around
+      // that bug by ignoring the error.
+      let oldClose = transport.close.bind(transport)
+      transport.close = () => {
+        try {
+          return oldClose()
+        } catch (e) {
+          if ('' + e == 'Error: invalid transport instance')
+            return Promise.resolve()
+          throw e
+        }
+      }
+
+      return transport
+    }, opts)
 
     this.engine.addProvider(this.provider)
     this.engine.addProvider(new RpcSubprovider({ rpcUrl: opts.rpcUrl}))
@@ -136,7 +167,7 @@ export class LedgerWeb3Wrapper {
 
     this.web3.eth.defaultAccount = accounts[0]
     console.log('Using Ledger address:', accounts[0], 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
-    
+
     return this.web3
   }
 
@@ -249,11 +280,13 @@ abstract class SmartContractWrapper {
       web3OrWrapper = web3OrWrapper.web3
 
     if (web3OrWrapper && web3OrWrapper.then) {
-      this.loaded = web3OrWrapper.then(web3 => {
-        this.web3 = web3
-        this.isLoaded = true
-        this.hasWeb3 = !!web3
-      })
+      this.loaded = web3OrWrapper
+        .then(null, err => null)
+        .then(web3 => {
+          this.web3 = web3
+          this.isLoaded = true
+          this.hasWeb3 = !!web3
+        })
     } else {
       this.web3 = web3OrWrapper
       this.hasWeb3 = !!web3OrWrapper
@@ -282,7 +315,7 @@ abstract class SmartContractWrapper {
           if (/User denied transaction signature/.exec('' + err))
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
 
-          if (/Sign failed/.exec('' + err) && this.web3._isLedger)
+          if (/Failed to sign/.exec('' + err) && this.web3._isLedger)
             return reject(new MetamaskError('LEDGER_LOCKED', 'Ledger is unplugged, locked, or the Ethereum app is not running.'))
 
           if (err && err.code && err.message)

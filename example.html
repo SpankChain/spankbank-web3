@@ -173,7 +173,7 @@
           if (!sc.hasWeb3) {
             return <p>
               Error: web3 not found or locked. Try unlocking then refreshing,
-              or installing Metamask:
+              or installing Metamask:{' '}
               <a href="https://metamask.io/">https://metamask.io</a>
             </p>
           }
@@ -226,8 +226,12 @@
           </div>)
         }
       })
-      
+
       window.ledgerWeb3 = new spankbank.LedgerWeb3Wrapper()
+      window.ledgerWeb3.then(
+        () => console.log('Ledger ready!'),
+        err => console.error('Ledger load error:', err)
+      )
 
       ReactDOM.render(
         <SpankBankWeb3Example />,
