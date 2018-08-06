@@ -14,7 +14,8 @@ export declare class LedgerWeb3Wrapper {
     web3: any;
     provider: any;
     ready: Promise<any>;
-    isU2FSupported: boolean;
+    isU2FSupported?: boolean;
+    isLedgerPresent?: boolean;
     constructor(_opts?: LedgerWeb3WrapperOpts);
     _init(opts: LedgerWeb3WrapperOpts): Promise<any>;
     then(...args: any[]): Promise<any>;
