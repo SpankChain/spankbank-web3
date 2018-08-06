@@ -4888,9 +4888,9 @@ source-map@^0.6.0, source-map@^0.6.1, source-map@~0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
 
-"spankbank@git+ssh://git@github.com:SpankChain/spankbank.git#0cb2824b6009fd144b9aab21fd37f74b93a0ce05":
+"spankbank@git+ssh://git@github.com:SpankChain/spankbank.git#2fc8469f16d8dd6cc3ae96e3ab90996df60164ad":
   version "0.0.1"
-  resolved "git+ssh://git@github.com:SpankChain/spankbank.git#0cb2824b6009fd144b9aab21fd37f74b93a0ce05"
+  resolved "git+ssh://git@github.com:SpankChain/spankbank.git#2fc8469f16d8dd6cc3ae96e3ab90996df60164ad"
   dependencies:
     chai "^4.1.2"
     chai-as-promised "^7.1.1"
