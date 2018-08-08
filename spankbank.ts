@@ -332,10 +332,11 @@ abstract class SmartContractWrapper {
     args = args || []
     return await this._metamaskCall(contractFuncName, args, async (cb) => {
       const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
+      const constant = contract.abi.filter(x => x.name === contractFuncName)[0].constant
 
       let options = { ...this.callOptions }
 
-      if (!this.callOptions.gas)
+      if (!this.callOptions.gas && !constant)
         options.gas = await p(contract[contractFuncName], 'estimateGas', ...args)
 
       if (!this.callOptions.gasPrice)
