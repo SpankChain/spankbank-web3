@@ -353,7 +353,7 @@ abstract class SmartContractWrapper {
 }
 
 
-interface Period {
+export interface Period {
   bootyFees: BootyAmount // the amount of BOOTY collected in fees
   totalSpankPoints: SpankPoints // the total spankPoints of all stakers
   bootyMinted: BootyAmount // the amount of BOOTY minted
@@ -362,7 +362,7 @@ interface Period {
   endTime: number // the ending unix timestamp in seconds
 }
 
-interface Staker {
+export interface Staker {
   spankStaked: SpankAmount // the amount of spank staked
   startingPeriod: number // the period this staker started staking
   endingPeriod: number // the period after which this stake expires

@@ -39,7 +39,7 @@ declare abstract class SmartContractWrapper {
     _call(contractFuncName: any, args?: any): Promise<any>;
     waitForTransactionReceipt(tx: string, timeout?: number): Promise<any>;
 }
-interface Period {
+export interface Period {
     bootyFees: BootyAmount;
     totalSpankPoints: SpankPoints;
     bootyMinted: BootyAmount;
@@ -47,7 +47,7 @@ interface Period {
     startTime: number;
     endTime: number;
 }
-interface Staker {
+export interface Staker {
     spankStaked: SpankAmount;
     startingPeriod: number;
     endingPeriod: number;
