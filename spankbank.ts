@@ -557,3 +557,40 @@ export class Token extends SmartContractWrapper {
     return sol2tsCasts.number(await this._call('totalSupply'))
   }
 }
+
+
+export class HumanStandardToken extends SmartContractWrapper {
+  static contractAbi: any = require('@contracts/HumanStandardToken.json').abi
+
+  getContractAbi() {
+    return HumanStandardToken.contractAbi
+  }
+
+  async balanceOf(owner: EthAddress): Promise<BootyAmount> {
+    return sol2tsCasts.BootyAmount(await this._call('balanceOf', [owner]))
+  }
+
+  async transfer(to: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('transfer', [to, value]))
+  }
+
+  async transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('transferFrom', [from, to, value]))
+  }
+
+  async approve(spender: EthAddress, value: BootyAmount): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('approve', [spender, value]))
+  }
+
+  async approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string[]): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('approveAndCall', [spender, value, extraData]))
+  }
+
+  async allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount> {
+    return sol2tsCasts.BootyAmount(await this._call('allowance', [owner, spender]))
+  }
+
+  async totalSupply(): Promise<number> {
+    return sol2tsCasts.number(await this._call('totalSupply'))
+  }
+}
