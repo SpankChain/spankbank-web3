@@ -545,10 +545,6 @@ export class Token extends SmartContractWrapper {
     return sol2tsCasts.TxHash(await this._call('approve', [spender, value]))
   }
 
-  async approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string[]): Promise<TxHash> {
-    return sol2tsCasts.TxHash(await this._call('approveAndCall', [spender, value, extraData]))
-  }
-
   async allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount> {
     return sol2tsCasts.BootyAmount(await this._call('allowance', [owner, spender]))
   }

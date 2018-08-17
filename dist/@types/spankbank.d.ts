@@ -98,19 +98,12 @@ export declare class Token extends SmartContractWrapper {
     transfer(to: EthAddress, value: BootyAmount): Promise<TxHash>;
     transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<TxHash>;
     approve(spender: EthAddress, value: BootyAmount): Promise<TxHash>;
-    approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string[]): Promise<TxHash>;
     allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount>;
     totalSupply(): Promise<number>;
 }
-export declare class HumanStandardToken extends SmartContractWrapper {
+export declare class HumanStandardToken extends Token {
     static contractAbi: any;
     getContractAbi(): any;
-    balanceOf(owner: EthAddress): Promise<BootyAmount>;
-    transfer(to: EthAddress, value: BootyAmount): Promise<TxHash>;
-    transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<TxHash>;
-    approve(spender: EthAddress, value: BootyAmount): Promise<TxHash>;
-    approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string[]): Promise<TxHash>;
-    allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount>;
-    totalSupply(): Promise<number>;
+    approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string): Promise<TxHash>;
 }
 export {};
