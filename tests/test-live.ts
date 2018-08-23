@@ -77,7 +77,12 @@ describe('SpankBank: live tests', () => {
       return
 
     await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
-    let stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')
+    let stdout: string
+    try {
+      stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')
+    } catch (e) {
+      throw new Error(e + '\nTHINGS TO CHECK:\n1. Did the install fail?\n2. Is ganache-cli running? (see "Testin" section of the README')
+    }
     let getAddress = name => {
       let match = stdout.match(new RegExp(name + ': (0x.*)'))
       if (!match)
