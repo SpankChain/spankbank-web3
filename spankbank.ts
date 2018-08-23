@@ -166,7 +166,7 @@ export class LedgerWeb3Wrapper {
     let accounts = await p(this.web3.eth, 'getAccounts')
 
     this.web3.eth.defaultAccount = accounts[0]
-    console.log('Using Ledger address:', accounts[0], 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
+    log.info('Using Ledger address:', accounts[0], 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
 
     return this.web3
   }
@@ -258,6 +258,14 @@ export async function waitForTransactionReceipt(web3: any, txHash: string, timeo
   }
 }
 
+interface Logger { debug: any, info: any, warn: any, error: any }
+
+let log: Logger = console
+
+export function setSpankBankLogger(logger: Logger) {
+  log = logger
+}
+
 abstract class SmartContractWrapper {
   isLoaded: boolean = false
   hasWeb3: boolean | null = null
@@ -302,15 +310,11 @@ abstract class SmartContractWrapper {
       throw new MetamaskError('NO_METAMASK', 'Web3 not found.')
     }
 
-    if (!(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
-      throw new MetamaskError('NOT_SIGNED_IN', 'Web3 is not signed in')
-    }
-
     return new Promise((resolve, reject) => {
       // Call async metamask API function
       //  -- metamask expects a callback with parameters (error, value)
       fn((err, val) => {
-        console.log(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
+        log.debug(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
         if (err) {
           if (/User denied transaction signature/.exec('' + err))
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
@@ -333,6 +337,10 @@ abstract class SmartContractWrapper {
     return await this._metamaskCall(contractFuncName, args, async (cb) => {
       const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
       const constant = contract.abi.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
+
+      if (constant && !(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
+        throw new MetamaskError('NOT_SIGNED_IN', 'Web3 is not signed in, but ${contractFuncName} requires gas.')
+      }
 
       let options = { ...this.callOptions }
 
@@ -519,6 +527,9 @@ export class SpankBank extends SmartContractWrapper {
     return sol2tsCasts.TxHash(await this._call('updateDelegateKey', [newDelegateKey]))
   }
   
+  async stakerByDelegateKey(key: EthAddress): Promise<EthAddress> {
+    return sol2tsCasts.EthAddress(await this._call('stakerByDelegateKey', [key]))
+  }
 }
 
 

@@ -76,8 +76,8 @@ describe('SpankBank: live tests', () => {
     if (!resetAfterTest)
       return
 
-    await runCommand({ cwd: __dirname + '/../node_modules/spankbank/' }, 'yarn')
-    let stdout = await runCommand({ cwd: __dirname + '/../node_modules/spankbank/' }, 'truffle', 'deploy', '--reset')
+    await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
+    let stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')
     let getAddress = name => {
       let match = stdout.match(new RegExp(name + ': (0x.*)'))
       if (!match)

@@ -20,7 +20,7 @@ module.exports = {
   resolve: {
     extensions: [ '.tsx', '.ts', '.js' ],
     alias: {
-      '@contracts': path.resolve(__dirname, findNodeModules()[0], 'spankbank/build/contracts/'),
+      '@contracts': path.resolve(__dirname, findNodeModules()[0], '@spankdev/spankbank/build/contracts/'),
     }
   },
 

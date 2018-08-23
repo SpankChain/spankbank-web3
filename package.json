@@ -10,6 +10,7 @@
     "test": "mocha --timeout 15000 -r ts-node/register -r tsconfig-paths/register tests/test-*.ts"
   },
   "devDependencies": {
+    "@spankdev/spankbank": "0.0.4",
     "@types/mocha": "^5.2.4",
     "@types/node": "^10.3.4",
     "chai": "^4.1.2",
@@ -17,7 +18,6 @@
     "chai-subset": "^1.6.0",
     "find-node-modules": "^1.0.4",
     "mocha": "^5.2.0",
-    "spankbank": "git+ssh://git@github.com:SpankChain/spankbank.git#0f0d6860bd697043e6edbb7deb09529a766d5523",
     "ts-loader": "^4.4.1",
     "ts-node": "^6.1.2",
     "tsc-watch": "^1.0.22",

@@ -23,7 +23,7 @@
     "outDir": "./dist/",
     "baseUrl": ".",
     "paths": {
-      "@contracts/*": ["./node_modules/spankbank/build/contracts/*"]
+      "@contracts/*": ["./node_modules/@spankdev/spankbank/build/contracts/*"]
     }
   },
   "include": [

@@ -1,19 +1,24 @@
-Overview
-========
+``spankbank-web3``: A JavaScript/TypeScript + Web3 Interface to the SpankBank
+=============================================================================
+
+For a demo, see: https://spankchain.github.io/spankbank-web3/
+
+For the actual SpankBank, see: https://spankbank.spankchain.com
+
 
 Using ``spankbank`` in Your App
 ===============================
 
 1. Add the package::
 
-    $ yarn add git+ssh://git@github.com:SpankChain/spankbank-web3.git#f1b39c8998
+    $ yarn add @spankdev/spankbank-web3
 
    Where ``f1b39c8998`` is the commit to pin (note: in the future this will be
    replaced with a tag).
 
 2. Use the ``SpankBank`` and ``Token``::
 
-    import { SpankBank, Token } from 'lib/spankbank'
+    import { SpankBank, Token } from '@spankdev/spankbank-web3'
 
     let spankbank = new SpankBank('0xaad6cdac26aed0894d55bfaf2d3252c6084f5fc4')
     spankbank
@@ -72,7 +77,20 @@ do that is with ``ngrok`` (https://ngrok.com/)::
 
     $ ngrok http 6933
     ...
-    Forwarding                    https://db0a61c0.ngrok.io -> localhost:6933                                          
+    Forwarding                    https://db0a61c0.ngrok.io -> localhost:6933
+
+Logging
+=======
+
+By default, logs will be sent to ``console``. This can be changed by calling
+``setSpankBankLogger`` with any ``console``-compatible logger::
+
+   import { setSpankBankLogger } from '@spankdev/spankbank-web3'
+
+   setSpankBankLogger({
+      info: (...args) => { myLog.info(args.join(' ')) },
+      ...
+   })
 
 Developing
 ==========

@@ -26,6 +26,13 @@ declare type SpankAmount = string;
 declare type SpankPoints = string;
 declare type BootyAmount = string;
 export declare function waitForTransactionReceipt(web3: any, txHash: string, timeout?: number): Promise<any>;
+interface Logger {
+    debug: any;
+    info: any;
+    warn: any;
+    error: any;
+}
+export declare function setSpankBankLogger(logger: Logger): void;
 declare abstract class SmartContractWrapper {
     isLoaded: boolean;
     hasWeb3: boolean | null;
@@ -90,6 +97,7 @@ export declare class SpankBank extends SmartContractWrapper {
     getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress>;
     voteToClose(): Promise<TxHash>;
     updateDelegateKey(newDelegateKey: EthAddress): Promise<TxHash>;
+    stakerByDelegateKey(key: EthAddress): Promise<EthAddress>;
 }
 export declare class Token extends SmartContractWrapper {
     static contractAbi: any;
