@@ -1,13 +1,14 @@
 {
-  "name": "spankbank-web3",
-  "version": "0.0.1",
+  "name": "@spankdev/spankbank-web3",
+  "version": "0.0.2",
   "main": "dist/spankbank.js",
   "types": "dist/@types/spankbank.d.ts",
   "scripts": {
     "start": "webpack-dev-server",
     "build": "rm -r dist; webpack",
     "example-build-defs": "ts-node example-build-defs.ts",
-    "test": "mocha --timeout 15000 -r ts-node/register -r tsconfig-paths/register tests/test-*.ts"
+    "test": "mocha --timeout 15000 -r ts-node/register -r tsconfig-paths/register tests/test-*.ts",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@spankdev/spankbank": "0.0.4",
