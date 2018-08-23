@@ -338,8 +338,8 @@ abstract class SmartContractWrapper {
       const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
       const constant = contract.abi.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
 
-      if (constant && !(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
-        throw new MetamaskError('NOT_SIGNED_IN', 'Web3 is not signed in, but ${contractFuncName} requires gas.')
+      if (!constant && !(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
+        throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
       }
 
       let options = { ...this.callOptions }
