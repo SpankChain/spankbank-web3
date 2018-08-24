@@ -94,8 +94,8 @@ export declare class SpankBank extends SmartContractWrapper {
     delegateKeys(key: EthAddress): Promise<EthAddress>;
     receiveApproval(from: EthAddress, amount: number, tokenContract: EthAddress, extraData: Buffer): Promise<boolean>;
     getVote(stakerAddress: EthAddress, period: number): Promise<boolean>;
-    getPeriod(period: number): Promise<Period>;
-    getStaker(stakerAddress: EthAddress): Promise<Staker>;
+    periods(period: number): Promise<Period>;
+    stakers(stakerAddress: EthAddress): Promise<Staker>;
     getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress>;
     voteToClose(): Promise<TxHash>;
     updateDelegateKey(newDelegateKey: EthAddress): Promise<TxHash>;

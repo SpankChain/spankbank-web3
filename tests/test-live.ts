@@ -138,28 +138,28 @@ describe('SpankBank: live tests', () => {
     await goNextPeriod()
     await sb.mintBooty()
 
-    assert.containSubset(await sb.getPeriod(1), {
+    assert.containSubset(await sb.periods(1), {
       bootyFees: '0',
       totalSpankPoints: '0',
       bootyMinted: '0',
       mintingComplete: false,
     })
 
-    assert.containSubset(await sb.getPeriod(2), {
+    assert.containSubset(await sb.periods(2), {
       bootyFees: '0',
       totalSpankPoints: '100',
       bootyMinted: '0',
       mintingComplete: true,
     })
 
-    assert.containSubset(await sb.getPeriod(3), {
+    assert.containSubset(await sb.periods(3), {
       bootyFees: '0',
       totalSpankPoints: '95',
       bootyMinted: '0',
       mintingComplete: false,
     })
 
-    assert.deepEqual(await sb.getStaker(web3.eth.defaultAccount), {
+    assert.deepEqual(await sb.stakers(web3.eth.defaultAccount), {
       spankStaked: '100',
       startingPeriod: 2,
       endingPeriod: 13,

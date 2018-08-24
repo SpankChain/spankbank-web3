@@ -4,8 +4,8 @@ import * as mp from '../metaprogramming'
 import * as spankbank from '../spankbank'
 
 let methodReturnStructs = {
-  'getPeriod': 'Period',
-  'getStaker': 'Staker',
+  'periods': 'Period',
+  'stakers': 'Staker',
 }
 
 let ignoreMethods = {

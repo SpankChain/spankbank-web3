@@ -511,12 +511,12 @@ export class SpankBank extends SmartContractWrapper {
     return sol2tsCasts.boolean(await this._call('getVote', [stakerAddress, period]))
   }
 
-  async getPeriod(period: number): Promise<Period> {
-    return sol2tsCasts.Period(await this._call('getPeriod', [period]))
+  async periods(period: number): Promise<Period> {
+    return sol2tsCasts.Period(await this._call('periods', [period]))
   }
 
-  async getStaker(stakerAddress: EthAddress): Promise<Staker> {
-    return sol2tsCasts.Staker(await this._call('getStaker', [stakerAddress]))
+  async stakers(stakerAddress: EthAddress): Promise<Staker> {
+    return sol2tsCasts.Staker(await this._call('stakers', [stakerAddress]))
   }
 
   async getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress> {
