@@ -1,6 +1,6 @@
 {
   "name": "@spankdev/spankbank-web3",
-  "version": "0.0.5-added-events",
+  "version": "0.0.5",
   "main": "dist/spankbank.js",
   "types": "dist/@types/spankbank.d.ts",
   "scripts": {
