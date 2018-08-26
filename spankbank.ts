@@ -534,6 +534,11 @@ export class SpankBank extends SmartContractWrapper {
   async stakerByDelegateKey(key: EthAddress): Promise<EthAddress> {
     return sol2tsCasts.EthAddress(await this._call('stakerByDelegateKey', [key]))
   }
+
+  async unsafeAdvancePeriod(): Promise<TxHash> {
+    return sol2tsCasts.TxHash(await this._call('unsafeAdvancePeriod'))
+  }
+
 }
 
 
