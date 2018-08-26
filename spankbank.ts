@@ -212,14 +212,14 @@ let sol2tsCasts = {
   SpankPoints: x => x,
   EthAddress: x => x,
   Period: (x): Period => ({
-    bootyFees: x[0].toFixed(),
-    totalSpankPoints: x[1].toFixed(),
-    bootyMinted: x[2].toFixed(),
+    bootyFees: x[0],
+    totalSpankPoints: x[1],
+    bootyMinted: x[2],
     mintingComplete: !!x[3],
-    startTime: x[4].toNumber(),
-    endTime: x[5].toNumber(),
-    closingVotes: x[6].toNumber(),
-    totalStakedSpank: x[7].toNumber(),
+    startTime: +x[4],
+    endTime: +x[5],
+    closingVotes: +x[6],
+    totalStakedSpank: +x[7],
   }),
   Staker: (x): Staker => ({
     spankStaked: x[0].toFixed(),
@@ -273,6 +273,7 @@ abstract class SmartContractWrapper {
   hasWeb3: boolean | null = null
   loaded: Promise<void>
   web3: any
+  contract: any
 
   // Web3 options to pass to smart contract calls (ex, { gas: 69696969 })
   callOptions: any = {}
@@ -296,12 +297,15 @@ abstract class SmartContractWrapper {
           this.web3 = web3
           this.isLoaded = true
           this.hasWeb3 = !!web3
+          if (this.web3)
+            this.contract = new this.web3.eth.Contract(this.getContractAbi(), this.contractAddress)
         })
     } else {
       this.web3 = web3OrWrapper
       this.hasWeb3 = !!web3OrWrapper
       this.isLoaded = true
       this.loaded = Promise.resolve()
+      this.contract = new this.web3.eth.Contract(this.getContractAbi(), this.contractAddress)
     }
   }
 
@@ -316,7 +320,7 @@ abstract class SmartContractWrapper {
       // Call async metamask API function
       //  -- metamask expects a callback with parameters (error, value)
       fn((err, val) => {
-        log.debug(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
+        //log.debug(`metamask result of ${funcName}(${args.map(x => JSON.stringify(x)).join(', ')}):`, err, val)
         if (err) {
           if (/User denied transaction signature/.exec('' + err))
             return reject(new MetamaskError('REJECTED_SIGNATURE', 'User denied message signature'))
@@ -337,8 +341,8 @@ abstract class SmartContractWrapper {
   async _call(contractFuncName, args?): Promise<any> {
     args = args || []
     return await this._metamaskCall(contractFuncName, args, async (cb) => {
-      const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
-      const constant = contract.abi.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
+      let abi = this.getContractAbi()
+      const constant = abi.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
 
       if (!constant && !(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
         throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
@@ -346,13 +350,18 @@ abstract class SmartContractWrapper {
 
       let options = { ...this.callOptions }
 
+      const { contract } = this
+      let method = contract.methods[contractFuncName](...args)
+      if (constant)
+        return method.call(options, cb)
+
       if (!this.callOptions.gas && !constant)
-        options.gas = await p(contract[contractFuncName], 'estimateGas', ...args)
+        options.gas = method.estimateGas()
 
       if (!this.callOptions.gasPrice)
-        options.gasPrice = (await p(this.web3.eth, 'getGasPrice')).toNumber()
+        options.gasPrice = await p(this.web3.eth, 'getGasPrice')
 
-      contract[contractFuncName](...args, options, cb)
+      method.send(options, cb)
     })
   }
 
