@@ -100,6 +100,7 @@ export declare class SpankBank extends SmartContractWrapper {
     voteToClose(): Promise<TxHash>;
     updateDelegateKey(newDelegateKey: EthAddress): Promise<TxHash>;
     stakerByDelegateKey(key: EthAddress): Promise<EthAddress>;
+    unsafeAdvancePeriod(): Promise<TxHash>;
 }
 export declare class Token extends SmartContractWrapper {
     static contractAbi: any;

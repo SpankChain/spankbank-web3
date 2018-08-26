@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>SpankBank-web3</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  </head>
+  <body>
+    <div id="container" class="container">Loading...</div>
+
+    <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+    <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script src="./dist/spankbank.js"></script>
+    <script src="./dist/example-defs.js"></script>
+
+    <style>
+      .smart-contract-methods {
+        border-left: 2px solid #AAA;
+        padding-left: 20px;
+        margin-bottom: 60px;
+      }
+
+      h3 {
+        border-bottom: 1px solid #DDD;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .smart-contract-function {
+        padding-bottom: 40px;
+        margin-bottom: 40px;
+      }
+
+    </style>
+
+
+    <script type="text/babel">
+      let Input = React.createClass({
+        render: function() {
+          let p = this.props
+          return (<div className="form-group">
+            <label>{p.label}</label>
+            <input type="text" className="form-control" defaultValue={p.getSet(p.name) || ''}
+              onBlur={e => p.getSet(p.name, e.target.value)}
+              onKeyPress={e => event.key == 'Enter' && p.getSet(p.name, e.target.value)} />
+          </div>)
+        },
+      })
+
+      function inputType(arg) {
+        if (arg.type == "number" || arg.type == "BootyAmount")
+          return "number"
+        return "text"
+      }
+
+      function inputValue(arg) {
+        if (arg.name == "period")
+          return 1
+        if (arg.type == "EthAddress")
+          return web3.eth.defaultAccount
+        return ""
+      }
+
+      let FunctionCall = React.createClass({
+        componentWillMount: function() {
+          this.inputRefs = {}
+          this.setState({
+            values: this.props.getSet(this.props.func.name) || {},
+          })
+        },
+
+        callFunc: function() {
+          this.setState({
+            pending: true,
+            res: undefined,
+            error: false,
+          })
+
+          let stateValues = {}
+          let args = this.props.func.args.map(arg => {
+            let value = this.inputRefs[arg.name].value
+            stateValues[arg.name] = value
+            return value
+          })
+          this.props.getSet(this.props.func.name, stateValues)
+          this.setState({
+            values: stateValues,
+          })
+
+          this.props.smartContract[this.props.func.name](...args)
+            .then(
+              res => this.setState({ res: res }),
+              err => this.setState({ res: err, error: true })
+            )
+            .finally(() => this.setState({ pending: false }))
+        },
+
+        render: function() {
+          let { func } = this.props
+          return (<div className="form-group smart-contract-function">
+            <h3><tt>{func.name}</tt></h3>
+            {func.args.map(arg => (
+              <div className="form-group row">
+                <label for={func.name + '-arg-' + arg.name} className="col-sm-2 col-form-label"><tt>{arg.name}</tt></label>
+                <div className="col-sm-10">
+                <input
+                  ref={ref => this.inputRefs[arg.name] = ref}
+                  type={inputType(arg)}
+                  className="form-control"
+                  id={func.name + '-arg-' + arg.name}
+                  placeholder={arg.name}
+                  defaultValue={this.state.values[arg.name] || inputValue(arg)} />
+                </div>
+              </div>
+            ))}
+            <button type="button" className="btn btn-primary" onClick={() => this.callFunc()} disabled={this.state.pending}>Call</button>
+            {this.state.res !== undefined && (<div>
+              <h4 style={{ marginTop: '20px' }}>Result:</h4>
+              <pre>
+                {func.returnType == 'TxHash' && !this.state.error ?
+                  <a href={'https://rinkeby.etherscan.io/tx/' + this.state.res}>{this.state.res}</a> :
+                  JSON.stringify(this.state.res)
+                }
+                {this.state.res && this.state.res.stack && '\n' + this.state.res.stack}
+              </pre>
+            </div>)}
+          </div>)
+        },
+      })
+
+      let SmartContractMethods = React.createClass({
+        componentWillMount: function() {
+          let savedForm = JSON.parse(window.localStorage['sc-saved-state:' + this.props.className] || 'null') || {}
+          this.setState({
+            loaded: false,
+            form: savedForm,
+          })
+        },
+
+        getSetFormField: function(name, val) {
+          if (val === undefined)
+            return this.state.form[name]
+          this.setState({
+            form: {
+              ...this.state.form,
+              [name]: val,
+            },
+          }, () => {
+            window.localStorage['sc-saved-state:' + this.props.className] = JSON.stringify(this.state.form)
+          })
+        },
+
+        render: function() {
+          let s = this.state
+          let sc = new spankbank[this.props.className](s.form.contractAddress, window.web3)
+
+          if (!sc.isLoaded) {
+            sc.loaded.then(() => {
+              this.setState({ loaded: true })
+            })
+            return <p>Waiting for Web3 to load...</p>
+          }
+
+          if (!sc.hasWeb3) {
+            return <p>
+              Error: web3 not found or locked. Try unlocking then refreshing,
+              or installing Metamask:{' '}
+              <a href="https://metamask.io/">https://metamask.io</a>
+            </p>
+          }
+
+          return (<div>
+            <h1><tt>{this.props.className}</tt></h1>
+
+            <Input getSet={this.getSetFormField.bind(this)} name="contractAddress" label="Contract Address" />
+
+            <div className="smart-contract-methods">
+              {this.props.methods.map(func => (
+                <FunctionCall
+                  smartContract={sc}
+                  func={func}
+                  getSet={this.getSetFormField.bind(this)} />
+              ))}
+            </div>
+
+          </div>)
+        },
+      });
+
+      let SpankBankWeb3Example = React.createClass({
+        render: function() {
+          if (window.location.protocol == 'file:') {
+            return <div>
+              <p>Error: web3 can only be used from http(s):// pages.</p>
+              <p>Try using <tt>npm start</tt> or <tt>./example-server</tt>.</p>
+            </div>
+          }
+
+          if (!window.exampleDefs) {
+            return <div>
+              <p>Error: the <tt>example-defs.js</tt> scripts was not loaded.</p>
+              <p>
+                Make sure it was build, which should happen automatically, but
+                if not, run <tt>./example-build-defs.ts</tt>.
+              </p>
+            </div>
+          }
+
+          // nb: these are loaded from example-defs.js, which is built by
+          // example-build-defs.ts
+          return (<div>
+            <h1>SpankBank Web3 Example</h1>
+
+            {window.exampleDefs.map(def => (
+              <SmartContractMethods className={def.className} methods={def.methods} />
+            ))}
+          </div>)
+        }
+      })
+
+      window.ledgerWeb3 = new spankbank.LedgerWeb3Wrapper()
+      window.ledgerWeb3.then(
+        () => console.log('Ledger ready!'),
+        err => console.error('Ledger load error:', err)
+      )
+
+      ReactDOM.render(
+        <SpankBankWeb3Example />,
+        document.getElementById('container')
+      );
+    </script>
+
+  </body>
+</html>
