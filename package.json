@@ -1,6 +1,6 @@
 {
   "name": "@spankdev/spankbank-web3",
-  "version": "0.0.8-remove-period",
+  "version": "0.0.8-1-remove-period",
   "main": "dist/spankbank.js",
   "types": "dist/@types/spankbank.d.ts",
   "scripts": {

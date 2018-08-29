@@ -58,6 +58,22 @@ let argumentOverrides = {
     expected: 'updatedEndingPeriod: uint256',
     actual: 'updatedEndingPeriod: string | number',
   },
+  'SpankBank.claimBooty': {
+    expected: 'claimPeriod: uint256',
+    actual: 'claimPeriod: string | number',
+  },
+  'SpankBank.getSpankPoints': {
+    expected: 'stakerAddress: address, period: uint256',
+    actual: 'stakerAddress: address, period: string | number',
+  },
+  'SpankBank.getDidClaimBooty': {
+    expected: 'stakerAddress: address, period: uint256',
+    actual: 'stakerAddress: address, period: string | number',
+  },
+  'SpankBank.getVote': {
+    expected: 'stakerAddress: address, period: uint256',
+    actual: 'stakerAddress: address, period: string | number',
+  },
 }
 
 let callOverrides = {

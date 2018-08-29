@@ -392,8 +392,8 @@ export class SpankBank extends SmartContractWrapper {
     return SpankBank.contractAbi
   }
 
-  async currentPeriod(): Promise<string> {
-    return sol2tsCasts.string(await this._call('currentPeriod'))
+  async currentPeriod(): Promise<number> {
+    return sol2tsCasts.number(await this._call('currentPeriod'))
   }
 
   async bootyToken(): Promise<EthAddress> {
@@ -452,7 +452,7 @@ export class SpankBank extends SmartContractWrapper {
     return sol2tsCasts.TxHash(await this._call('checkIn', [updatedEndingPeriod]))
   }
 
-  async claimBooty(claimPeriod: string): Promise<TxHash> {
+  async claimBooty(claimPeriod: string | number): Promise<TxHash> {
     return sol2tsCasts.TxHash(await this._call('claimBooty', [claimPeriod]))
   }
 
@@ -476,15 +476,15 @@ export class SpankBank extends SmartContractWrapper {
     return sol2tsCasts.TxHash(await this._call('updateBootyBase', [newBootyBase]))
   }
 
-  async getSpankPoints(stakerAddress: EthAddress, period: string): Promise<string> {
+  async getSpankPoints(stakerAddress: EthAddress, period: string | number): Promise<string> {
     return sol2tsCasts.string(await this._call('getSpankPoints', [stakerAddress, period]))
   }
 
-  async getDidClaimBooty(stakerAddress: EthAddress, period: string): Promise<boolean> {
+  async getDidClaimBooty(stakerAddress: EthAddress, period: string | number): Promise<boolean> {
     return sol2tsCasts.boolean(await this._call('getDidClaimBooty', [stakerAddress, period]))
   }
 
-  async getVote(stakerAddress: EthAddress, period: string): Promise<boolean> {
+  async getVote(stakerAddress: EthAddress, period: string | number): Promise<boolean> {
     return sol2tsCasts.boolean(await this._call('getVote', [stakerAddress, period]))
   }
 

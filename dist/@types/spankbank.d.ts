@@ -54,7 +54,6 @@ export interface Period {
     startTime: number;
     endTime: number;
     closingVotes: number;
-    totalStakedSpank: number;
 }
 export interface Staker {
     spankStaked: SpankAmount;
@@ -66,40 +65,33 @@ export interface Staker {
 export declare class SpankBank extends SmartContractWrapper {
     static contractAbi: any;
     getContractAbi(): any;
-    periodLength(): Promise<number>;
-    maxPeriods(): Promise<number>;
-    totalSpankStaked(): Promise<number>;
-    unwindVotes(): Promise<number>;
-    unwindPeriod(): Promise<number>;
     currentPeriod(): Promise<number>;
-    stake(spankAmount: SpankAmount, stakePeriods: number, delegateKey: EthAddress, bootyBase: EthAddress): Promise<TxHash>;
-    getSpankPoints(stakerAddress: EthAddress, period: number): Promise<SpankPoints>;
-    getDidClaimBooty(stakerAddress: EthAddress, period: number): Promise<boolean>;
-    sendFees(bootyAmount: BootyAmount): Promise<TxHash>;
+    bootyToken(): Promise<EthAddress>;
+    maxPeriods(): Promise<string>;
+    stakerByDelegateKey(key: EthAddress): Promise<EthAddress>;
+    spankToken(): Promise<EthAddress>;
+    pointsTable(key: string): Promise<string>;
+    isClosed(): Promise<boolean>;
+    totalSpankStaked(): Promise<string>;
+    periodLength(): Promise<number>;
+    stake(spankAmount: string, stakePeriods: string | number, delegateKey: EthAddress, bootyBase: EthAddress): Promise<TxHash>;
+    receiveApproval(from: EthAddress, amount: string, tokenContract: EthAddress, extraData: Buffer): Promise<boolean>;
+    sendFees(bootyAmount: string): Promise<TxHash>;
     mintBooty(): Promise<TxHash>;
     updatePeriod(): Promise<TxHash>;
-    checkIn(updatedEndingPeriod: number): Promise<TxHash>;
-    claimBooty(period: number): Promise<TxHash>;
+    checkIn(updatedEndingPeriod: string | number): Promise<TxHash>;
+    claimBooty(claimPeriod: string | number): Promise<TxHash>;
     withdrawStake(): Promise<TxHash>;
-    splitStake(newAddress: EthAddress, newDelegateKey: EthAddress, newBootyBase: EthAddress, spankAmount: SpankAmount): Promise<TxHash>;
-    voteToUnwind(): Promise<TxHash>;
-    updateActivityKey(newDelegateKey: EthAddress): Promise<TxHash>;
-    updateSendBootyAddress(newSendBootyAddress: EthAddress): Promise<TxHash>;
-    updateBootyBase(newBootyBase: EthAddress): Promise<TxHash>;
-    closingVotes(): Promise<number>;
-    bootyToken(): Promise<EthAddress>;
-    spankToken(): Promise<EthAddress>;
-    isClosed(): Promise<boolean>;
-    closingPeriod(): Promise<number>;
-    delegateKeys(key: EthAddress): Promise<EthAddress>;
-    receiveApproval(from: EthAddress, amount: number, tokenContract: EthAddress, extraData: Buffer): Promise<boolean>;
-    getVote(stakerAddress: EthAddress, period: number): Promise<boolean>;
-    periods(period: number): Promise<Period>;
-    stakers(stakerAddress: EthAddress): Promise<Staker>;
-    getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress>;
+    splitStake(newAddress: EthAddress, newDelegateKey: EthAddress, newBootyBase: EthAddress, spankAmount: string): Promise<TxHash>;
     voteToClose(): Promise<TxHash>;
     updateDelegateKey(newDelegateKey: EthAddress): Promise<TxHash>;
-    stakerByDelegateKey(key: EthAddress): Promise<EthAddress>;
+    updateBootyBase(newBootyBase: EthAddress): Promise<TxHash>;
+    getSpankPoints(stakerAddress: EthAddress, period: string | number): Promise<string>;
+    getDidClaimBooty(stakerAddress: EthAddress, period: string | number): Promise<boolean>;
+    getVote(stakerAddress: EthAddress, period: string | number): Promise<boolean>;
+    getStakerFromDelegateKey(delegateAddress: EthAddress): Promise<EthAddress>;
+    periods(key: string | number): Promise<Period>;
+    stakers(key: EthAddress): Promise<Staker>;
 }
 export declare class Token extends SmartContractWrapper {
     static contractAbi: any;
@@ -109,7 +101,7 @@ export declare class Token extends SmartContractWrapper {
     transferFrom(from: EthAddress, to: EthAddress, value: BootyAmount): Promise<TxHash>;
     approve(spender: EthAddress, value: BootyAmount): Promise<TxHash>;
     allowance(owner: EthAddress, spender: EthAddress): Promise<BootyAmount>;
-    totalSupply(): Promise<number>;
+    totalSupply(): Promise<string>;
 }
 export declare class HumanStandardToken extends Token {
     static contractAbi: any;

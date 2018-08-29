@@ -76,7 +76,7 @@ describe('SpankBank: live tests', () => {
     if (!resetAfterTest)
       return
 
-    //await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
+    await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
     let stdout: string
     try {
       stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')
