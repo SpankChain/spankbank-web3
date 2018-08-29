@@ -66,7 +66,7 @@ describe('SpankBank: live tests', () => {
       id: 69,
       jsonrpc: "2.0",
       method: "evm_increaseTime",
-      params: [periodLength + 100],
+      params: [+periodLength + 100],
     }, (err, result) => err ? rej(err) : res(result)))
     
     let tx = await sb.updatePeriod()
@@ -76,7 +76,7 @@ describe('SpankBank: live tests', () => {
     if (!resetAfterTest)
       return
 
-    await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
+    //await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'yarn')
     let stdout: string
     try {
       stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')

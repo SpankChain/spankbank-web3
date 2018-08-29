@@ -8,11 +8,6 @@ let methodReturnStructs = {
   'stakers': 'Staker',
 }
 
-let ignoreMethods = {
-  'stakers': true,
-  'periods': true,
-}
-
 function findStructName(methodName) {
   let name = methodReturnStructs[methodName]
   if (!name) {
@@ -27,9 +22,6 @@ function getExpectedMethodsFromContractAbi(abi): any[] {
   let expectedMethods: any[] = []
   abi.forEach(method => {
     if (method.type !== 'function')
-      return
-
-    if (ignoreMethods[method.name])
       return
 
     if (method.inputs.length && method.inputs[0].name == '')
@@ -53,9 +45,31 @@ function getExpectedMethodsFromContractAbi(abi): any[] {
   return expectedMethods
 }
 
+let argumentOverrides = {
+  'SpankBank.periods': {
+    expected: 'key: uint256',
+    actual: 'key: string | number',
+  },
+  'SpankBank.stake': {
+    expected: 'spankAmount: uint256, stakePeriods: uint256, delegateKey: address, bootyBase: address',
+    actual: 'spankAmount: uint256, stakePeriods: string | number, delegateKey: address, bootyBase: address',
+  },
+  'SpankBank.checkIn': {
+    expected: 'updatedEndingPeriod: uint256',
+    actual: 'updatedEndingPeriod: string | number',
+  },
+}
+
+let callOverrides = {
+  'SpankBank.periodLength': {
+    expected: "return sol2tsCasts.number(await this._call('periodLength'))",
+    actual: "return sol2tsCasts.string(await this._call('periodLength'))",
+  }
+}
+
 function tsArgTypeToSolType(type) {
   return {
-    number: 'uint256',
+    string: 'uint256',
     EthAddress: 'address',
     SpankAmount: 'uint256',
     BootyAmount: 'uint256',
@@ -65,7 +79,7 @@ function tsArgTypeToSolType(type) {
 
 function solArgTypeToTsType(type) {
   return {
-    'uint256': 'number',
+    'uint256': 'string',
     'address': 'EthAddress',
     'void': 'TxHash',
     'bool': 'boolean',
@@ -73,12 +87,19 @@ function solArgTypeToTsType(type) {
   }[type] || type
 }
 
-function methodToExpectedCall(m) {
+function methodToExpectedCall(className, m) {
   let expectedArgs = (
     m.args.length == 0 ? '' :
     `, [${m.args.map(a => a.name).join(', ')}]`
   )
-  return `return sol2tsCasts.${solArgTypeToTsType(m.returnType)}(await this._call('${m.name}'${expectedArgs}))`
+  let expected = `return sol2tsCasts.${solArgTypeToTsType(m.returnType)}(await this._call('${m.name}'${expectedArgs}))`
+  let override = callOverrides[className + '.' + m.name]
+  if (override) {
+    if (override.expected != expected)
+      throw new Error(`callOverrides['${className}.${m.name}'].expected != '${expected}'`)
+    return override.actual
+  }
+  return expected
 }
 
 function checkSmartContract(sourceFile, className: string, abi: any): boolean {
@@ -87,7 +108,7 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
   // Check that each method correctly calls `return await this._call('name', [args])`
   let mismatchedCalls: any[] = []
   definedMethods.forEach(m => {
-    let expectedCall = methodToExpectedCall(m)
+    let expectedCall = methodToExpectedCall(className, m)
     if (expectedCall != m.call) {
       mismatchedCalls.push({
         method: m,
@@ -119,16 +140,29 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
     for (let i = 0; i < Math.max(definedMethod.args.length, method.args.length); i += 1) {
       let dArg = definedMethod.args[i]
       let mArg = method.args[i]
+
+      let expectedArgsStr = method.args.map(arg => arg.name + ': ' + arg.type).join(', ')
+      let actualArgsStr = definedMethod.args.map(arg => arg.name + ': ' + tsArgTypeToSolType(arg.type)).join(', ')
+
+      let override = argumentOverrides[className + '.' + method.name]
+      if (override && override.expected != expectedArgsStr)
+        throw new Error(`argumentOverrides['${className}.${method.name}'].expected != '${expectedArgsStr}'`)
+
       let argMismatch = (
-        (!dArg || !mArg) ||
-        (dArg.name != mArg.name) ||
-        (tsArgTypeToSolType(dArg.type) != mArg.type)
+        override ? override.actual != actualArgsStr :
+        (
+          (!dArg || !mArg) ||
+          (dArg.name != mArg.name) ||
+          (tsArgTypeToSolType(dArg.type) != mArg.type)
+        )
       )
 
       if (argMismatch) {
         mismatchedMethods.push({
           expected: method,
           actual: definedMethod,
+          expectedArgsStr,
+          actualArgsStr,
         })
         return
       }
@@ -139,7 +173,7 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
     console.error(`${className}: ${missingMethods.length} missing methods`)
 
   missingMethods.forEach(m => {
-    let expectedCall = methodToExpectedCall(m)
+    let expectedCall = methodToExpectedCall(className, m)
     let expectedArgs = m.args.map(a => `${a.name}: ${solArgTypeToTsType(a.type)}`).join(', ')
     console.error(`  async ${m.name}(${expectedArgs}): Promise<${solArgTypeToTsType(m.returnType)}> {`)
     console.error(`    ${expectedCall}`)
@@ -149,8 +183,8 @@ function checkSmartContract(sourceFile, className: string, abi: any): boolean {
 
   mismatchedMethods.forEach(m => {
     console.error(className + '.' + m.expected.name + ': argument mismatch!')
-    console.error('  Expected:', m.expected.args.map(arg => arg.name + ': ' + arg.type).join(', '))
-    console.error('    Actual:', m.actual.args.map(arg => arg.name + ': ' + tsArgTypeToSolType(arg.type)).join(', '))
+    console.error('  Expected:', m.expectedArgsStr)
+    console.error('    Actual:', m.actualArgsStr)
   })
 
   return !!(mismatchedMethods.length || mismatchedCalls.length || missingMethods.length)
