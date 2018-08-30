@@ -83,12 +83,27 @@ describe('SpankBank: live tests', () => {
     } catch (e) {
       throw new Error(e + '\nTHINGS TO CHECK:\n1. Did the install fail?\n2. Is ganache-cli running? (see "Testin" section of the README')
     }
+
     let getAddress = name => {
-      let match = stdout.match(new RegExp(name + ': (0x.*)'))
-      if (!match)
-        throw new Error(`'${name}' not found in:\n${stdout}`)
-      return match[1]
+      let lookingForAddress = false
+      for (let line of stdout.split('\n')) {
+        if (line.match(new RegExp('(Deploying|Replacing).*' + name))) {
+          lookingForAddress = true
+          continue
+        }
+
+        if (lookingForAddress) {
+          let match = line.match(/contract address:\s*(0x.+)/)
+          if (match)
+            return match[1]
+
+          if (line.replace(/\s*/, '').length == 0)
+            break
+        }
+      }
+      throw new Error(`Could not find address for contract '${name}' in ganache-cli output (probably a bug in the tests):\n${stdout}`)
     }
+
     token = new Token(getAddress('HumanStandardToken'), web3)
     sb = new SpankBank(getAddress('SpankBank'), web3)
     sb.callOptions = {
