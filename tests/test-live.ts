@@ -81,7 +81,7 @@ describe('SpankBank: live tests', () => {
     try {
       stdout = await runCommand({ cwd: __dirname + '/../node_modules/@spankdev/spankbank/' }, 'truffle', 'deploy', '--reset')
     } catch (e) {
-      throw new Error(e + '\nTHINGS TO CHECK:\n1. Did the install fail?\n2. Is ganache-cli running? (see "Testin" section of the README')
+      throw new Error(e + '\nTHINGS TO CHECK:\n1. Did the install fail?\n2. Is ganache-cli running? (see "Testing" section of the README)')
     }
 
     let getAddress = name => {

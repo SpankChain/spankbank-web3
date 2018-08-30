@@ -206,7 +206,11 @@ class MetamaskError extends Error {
 
 let sol2tsCasts = {
   boolean: x => !!x,
-  number: x => +x,
+  number: x => (
+    typeof x == 'string' ? +x :
+    typeof x == 'number' ? x :
+    x.toNumber()
+  ),
   string: x => (
     typeof x == 'string' ? x :
     typeof x == 'number' ? x.toString() :
@@ -221,8 +225,8 @@ let sol2tsCasts = {
     totalSpankPoints: x[1].toFixed(),
     bootyMinted: x[2].toFixed(),
     mintingComplete: !!x[3],
-    startTime: x[4].toFixed(),
-    endTime: x[5].toFixed(),
+    startTime: x[4].toNumber(),
+    endTime: x[5].toNumber(),
     closingVotes: x[6].toNumber(),
   }),
   Staker: (x): Staker => ({
@@ -425,7 +429,7 @@ export class SpankBank extends SmartContractWrapper {
   }
 
   async periodLength(): Promise<number> {
-    return sol2tsCasts.string(await this._call('periodLength'))
+    return sol2tsCasts.number(await this._call('periodLength'))
   }
 
   async stake(spankAmount: string, stakePeriods: string | number, delegateKey: EthAddress, bootyBase: EthAddress): Promise<TxHash> {

@@ -79,7 +79,7 @@ let argumentOverrides = {
 let callOverrides = {
   'SpankBank.periodLength': {
     expected: "return sol2tsCasts.number(await this._call('periodLength'))",
-    actual: "return sol2tsCasts.string(await this._call('periodLength'))",
+    actual: "return sol2tsCasts.number(await this._call('periodLength'))",
   }
 }
 
