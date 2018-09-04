@@ -48,6 +48,14 @@ To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
       // RPC endpoint will be used.
       networkId: 1,
       rpcUrl: 'https://mainnet.infura.io/metamask',
+      // Any ledger request (for example, to sign a transaction) will take
+      // this long to timeout. This number should be set to about 7 seconds
+      // to detect the presence of a Ledger device (7 seconds has been
+      // determined by experimentation to be a good balance between false
+      // negatives and a long wait for a true negative). The
+      // ``setLedgerTimeoutSeconds`` method can also be used to change the
+      // timeout after instantiation.
+      ledgerTimeoutSeconds: 30,
     }}
 
     // Wait for the ledger to load.
@@ -55,8 +63,8 @@ To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
     // if the ledger is unplugged, locked, or the Ethereum app hasn't been
     // started. Unfortuantely there doesn't seem to be a better way to
     // distinguish between these cases.
-    // Additionally, it will take 7 seconds to fail with ``LEDGER_LOCKED``.
-    // See comments above ``transport.exchangeTimeout`` in ``spankbank.ts``.
+    // Additionally, it will take ``ledgerTimeoutSeconds`` (default: 30)
+    // seconds to fail with ``LEDGER_LOCKED``.
     ledgerWrapper.then(
       () => console.log('Ledger ready!'),
       err => {

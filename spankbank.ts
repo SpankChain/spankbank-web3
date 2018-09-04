@@ -36,7 +36,7 @@ class Web3Wrapper {
   }
 }
 
-let windowWeb3Wrapper = new Web3Wrapper();
+let windowWeb3Wrapper = new Web3Wrapper()
 
 if (typeof window == 'undefined') {
   windowWeb3Wrapper.setWeb3(null)
@@ -64,9 +64,10 @@ let networkDefaultRpcUrls = {
   42: 'https://kovan.infura.io/metamask',
 }
 
-interface LedgerWeb3WrapperOpts {
+export interface LedgerWeb3WrapperOpts {
   networkId?: string | number
   rpcUrl?: string
+  ledgerTimeoutSeconds?: number
 }
 
 export class LedgerWeb3Wrapper {
@@ -77,9 +78,14 @@ export class LedgerWeb3Wrapper {
   ready: Promise<any>
   isU2FSupported?: boolean
   isLedgerPresent?: boolean
+  ledgerTransport: any
+
+  private ledgerTimeoutSeconds: number
 
   constructor(_opts?: LedgerWeb3WrapperOpts) {
     let opts = _opts || {}
+
+    this.ledgerTimeoutSeconds = opts.ledgerTimeoutSeconds || 30
 
     var Web3 = require('web3')
     var ProviderEngine = require('web3-provider-engine')
@@ -134,19 +140,15 @@ export class LedgerWeb3Wrapper {
     }
 
     this.provider = await LedgerWalletSubproviderFactory(async () => {
-      let transport = await TransportU2F.create(1000, 1000)
-
-      // Hard-code a 7 second timeout before giving up and deciding that no
-      // ledger is attached. This number is number is somewhat arbitrary: a
-      // timeout less than 5 seconds will sometimes fail to detect an attached
-      // ledger, and 2 extra seconds are added for safety.
-      transport.exchangeTimeout = 7000
+      this.ledgerTransport = await TransportU2F.create(1000, 1000)
+      this.ledgerTransport.exchangeTimeout = this.ledgerTimeoutSeconds * 1000
 
       // There's a bug in `transport.close` where it throws an error if it has
       // already been removed from a list of "active transports". Work around
       // that bug by ignoring the error.
-      let oldClose = transport.close.bind(transport)
-      transport.close = () => {
+      let oldClose = this.ledgerTransport.close.bind(this.ledgerTransport)
+      this.ledgerTransport.close = () => {
+        this.ledgerTransport = null
         try {
           return oldClose()
         } catch (e) {
@@ -156,7 +158,7 @@ export class LedgerWeb3Wrapper {
         }
       }
 
-      return transport
+      return this.ledgerTransport
     }, opts)
 
     this.engine.addProvider(this.provider)
@@ -171,18 +173,28 @@ export class LedgerWeb3Wrapper {
     return this.web3
   }
 
+  setLedgerTimeoutSeconds(ledgerTimeoutSeconds: number) {
+    this.ledgerTimeoutSeconds = ledgerTimeoutSeconds
+    if (this.ledgerTransport)
+      this.ledgerTransport.exchangeTimeout = this.ledgerTimeoutSeconds * 1000
+  }
+
+  getLedgerTimeoutSeconds(): number {
+    return this.ledgerTimeoutSeconds
+  }
+
   then(...args) {
     return this.ready.then(...args)
   }
 }
 
 
-type EthAddress = string
-type TxHash = string
+export type EthAddress = string
+export type TxHash = string
 
-type SpankAmount = string
-type SpankPoints = string
-type BootyAmount = string
+export type SpankAmount = string
+export type SpankPoints = string
+export type BootyAmount = string
 
 type MetamaskErrorType =
   'NO_METAMASK' |
@@ -268,7 +280,7 @@ export async function waitForTransactionReceipt(web3: any, txHash: string, timeo
   }
 }
 
-interface Logger { debug: any, info: any, warn: any, error: any }
+export interface Logger { debug: any, info: any, warn: any, error: any }
 
 let log: Logger = console
 
@@ -276,7 +288,7 @@ export function setSpankBankLogger(logger: Logger) {
   log = logger
 }
 
-abstract class SmartContractWrapper {
+export abstract class SmartContractWrapper {
   isLoaded: boolean = false
   hasWeb3: boolean | null = null
   loaded: Promise<void>

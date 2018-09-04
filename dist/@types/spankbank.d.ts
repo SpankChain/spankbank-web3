@@ -4,9 +4,10 @@ declare global {
         web3: any;
     }
 }
-interface LedgerWeb3WrapperOpts {
+export interface LedgerWeb3WrapperOpts {
     networkId?: string | number;
     rpcUrl?: string;
+    ledgerTimeoutSeconds?: number;
 }
 export declare class LedgerWeb3Wrapper {
     web3FullyLoaded: boolean;
@@ -16,24 +17,28 @@ export declare class LedgerWeb3Wrapper {
     ready: Promise<any>;
     isU2FSupported?: boolean;
     isLedgerPresent?: boolean;
+    ledgerTransport: any;
+    private ledgerTimeoutSeconds;
     constructor(_opts?: LedgerWeb3WrapperOpts);
     _init(opts: LedgerWeb3WrapperOpts): Promise<any>;
+    setLedgerTimeoutSeconds(ledgerTimeoutSeconds: number): void;
+    getLedgerTimeoutSeconds(): number;
     then(...args: any[]): Promise<any>;
 }
-declare type EthAddress = string;
-declare type TxHash = string;
-declare type SpankAmount = string;
-declare type SpankPoints = string;
-declare type BootyAmount = string;
+export declare type EthAddress = string;
+export declare type TxHash = string;
+export declare type SpankAmount = string;
+export declare type SpankPoints = string;
+export declare type BootyAmount = string;
 export declare function waitForTransactionReceipt(web3: any, txHash: string, timeout?: number): Promise<any>;
-interface Logger {
+export interface Logger {
     debug: any;
     info: any;
     warn: any;
     error: any;
 }
 export declare function setSpankBankLogger(logger: Logger): void;
-declare abstract class SmartContractWrapper {
+export declare abstract class SmartContractWrapper {
     isLoaded: boolean;
     hasWeb3: boolean | null;
     loaded: Promise<void>;
@@ -108,4 +113,3 @@ export declare class HumanStandardToken extends Token {
     getContractAbi(): any;
     approveAndCall(spender: EthAddress, value: BootyAmount, extraData: string): Promise<TxHash>;
 }
-export {};
