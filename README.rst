@@ -75,7 +75,7 @@ To use with the Ledger Nano, use the provided ``LedgerWeb3Wrapper``::
 Note: HTTPS must be used even when developing locally. The simplest way to
 do that is with ``ngrok`` (https://ngrok.com/)::
 
-    $ ngrok http 6933
+    $ ngrok http --host-header=rewrite 6933
     ...
     Forwarding                    https://db0a61c0.ngrok.io -> localhost:6933
 
