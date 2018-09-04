@@ -3,7 +3,7 @@
 
 For a demo, see: https://spankchain.github.io/spankbank-web3/
 
-For the actual SpankBank, see: https://spankbank.spankchain.com
+For the actual SpankBank, see: https://bank.spankchain.com
 
 
 Using ``spankbank`` in Your App
