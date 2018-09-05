@@ -239,7 +239,7 @@ let sol2tsCasts = {
     mintingComplete: !!x[3],
     startTime: x[4].toNumber(),
     endTime: x[5].toNumber(),
-    closingVotes: x[6].toNumber(),
+    closingVotes: x[6].toFixed(),
   }),
   Staker: (x): Staker => ({
     spankStaked: x[0].toFixed(),
@@ -390,7 +390,7 @@ export interface Period {
   mintingComplete: boolean // true if BOOTY has already been minted for this period
   startTime: number // the starting unix timestamp in seconds
   endTime: number // the ending unix timestamp in seconds
-  closingVotes: number // the total votes to close this period
+  closingVotes: SpankPoints // the total votes to close this period
 }
 
 export interface Staker {
