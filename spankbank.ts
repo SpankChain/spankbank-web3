@@ -364,7 +364,9 @@ export abstract class SmartContractWrapper {
         throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
       }
 
-      contract[contractFuncName](...args, ...this.callOptions, cb)
+      const options = { ...this.callOptions }
+
+      contract[contractFuncName](...args, options, cb)
     })
   }
 
