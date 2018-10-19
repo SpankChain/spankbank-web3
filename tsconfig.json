@@ -8,6 +8,7 @@
     "declaration": true,
     "declarationDir": "@types",
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "lib": [
       "es5",
       "es2015",

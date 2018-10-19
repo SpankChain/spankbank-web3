@@ -1,3 +1,12 @@
+import Web3 from 'web3'
+import ProviderEngine from 'web3-provider-engine'
+import TransportU2F from '@ledgerhq/hw-transport-u2f'
+import LedgerWalletSubproviderFactory from '@ledgerhq/web3-subprovider'
+import RpcSubprovider from 'web3-provider-engine/subproviders/rpc'
+import { abi as SpankBankContractAbi } from '@contracts/SpankBank.json'
+import { abi as TokenContractAbi } from '@contracts/Token.json'
+import { abi as HumanStandardTokenContractAbi } from '@contracts/HumanStandardToken.json'
+
 declare let SMART_CONTRACT_ROOT: string
 declare global {
   interface Window {
@@ -87,9 +96,6 @@ export class LedgerWeb3Wrapper {
 
     this.ledgerTimeoutSeconds = opts.ledgerTimeoutSeconds || 30
 
-    var Web3 = require('web3')
-    var ProviderEngine = require('web3-provider-engine')
-
     this.engine = new ProviderEngine()
     this.web3 = new Web3(this.engine)
     this.web3._isLedger = true
@@ -110,10 +116,6 @@ export class LedgerWeb3Wrapper {
   }
 
   async _init(opts: LedgerWeb3WrapperOpts) {
-    let TransportU2F = require('@ledgerhq/hw-transport-u2f').default
-    var LedgerWalletSubproviderFactory = require('@ledgerhq/web3-subprovider').default
-    var RpcSubprovider = require('web3-provider-engine/subproviders/rpc')
-
     if (!opts.networkId) {
       let windowWeb3 = await windowWeb3Wrapper.onWeb3Load
       if (!windowWeb3)
@@ -402,7 +404,7 @@ export interface Staker {
 }
 
 export class SpankBank extends SmartContractWrapper {
-  static contractAbi: any = require('@contracts/SpankBank.json').abi
+  static contractAbi: any = SpankBankContractAbi
 
   getContractAbi() {
     return SpankBank.contractAbi
@@ -520,7 +522,7 @@ export class SpankBank extends SmartContractWrapper {
 
 
 export class Token extends SmartContractWrapper {
-  static contractAbi: any = require('@contracts/Token.json').abi
+  static contractAbi: any = TokenContractAbi
 
   getContractAbi() {
     return Token.contractAbi
@@ -553,7 +555,7 @@ export class Token extends SmartContractWrapper {
 
 
 export class HumanStandardToken extends Token {
-  static contractAbi: any = require('@contracts/HumanStandardToken.json').abi
+  static contractAbi: any = HumanStandardTokenContractAbi
 
   getContractAbi() {
     return HumanStandardToken.contractAbi
