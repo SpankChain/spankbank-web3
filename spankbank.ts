@@ -20,7 +20,7 @@ class Web3Wrapper {
   setWeb3(web3) {
     this.web3 = web3
     if (web3) {
-      web3.eth.getAccounts(() => {
+      web3.request({ method: 'eth_accounts' })(() => {
         this.web3FullyLoaded = true
         this._onLoadRes(web3)
       })
@@ -43,7 +43,7 @@ if (typeof window == 'undefined') {
 } else {
   let onLoad = () => {
     window.removeEventListener('load', onLoad)
-    windowWeb3Wrapper.setWeb3(window.web3)
+    windowWeb3Wrapper.setWeb3((window as any).ethereum)
   }
   window.addEventListener('load', onLoad)
 }
