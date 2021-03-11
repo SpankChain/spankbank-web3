@@ -18,6 +18,8 @@ class Web3Wrapper {
   }
 
   setWeb3(web3) {
+    console.log("Hello there")
+    throw new Error("IS_THIS_THING_ON_EXCEPTION")
     this.web3 = web3
     if (web3) {
       web3.request({ method: 'eth_accounts' })(() => {
