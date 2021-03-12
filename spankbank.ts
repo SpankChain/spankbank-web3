@@ -25,10 +25,10 @@ class Web3Wrapper {
     if (web3) {
       console.log("LOOKS LIKE WE MADE IT")
       console.log(web3)
-      console.log(web3.request)
+      console.log(web3.request({ method: 'eth_accounts' }))
       console.log("CONFUSED_CAT")
 
-      web3.request({ method: 'eth_accounts' })((ressy) => {
+      web3.request({ method: 'eth_accounts' }).then((ressy) => {
         console.log("Here's the ressy: ", ressy)
         this.web3FullyLoaded = true
         this._onLoadRes(web3)
