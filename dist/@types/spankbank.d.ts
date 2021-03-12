@@ -58,7 +58,7 @@ export interface Period {
     mintingComplete: boolean;
     startTime: number;
     endTime: number;
-    closingVotes: number;
+    closingVotes: SpankPoints;
 }
 export interface Staker {
     spankStaked: SpankAmount;
