@@ -54,11 +54,14 @@ class Web3Wrapper {
 let windowWeb3Wrapper = new Web3Wrapper()
 
 if (typeof window == 'undefined') {
+  console.log("NOT HERE RIGHT?")
   windowWeb3Wrapper.setWeb3(null)
 } else {
   let onLoad = () => {
-    window.removeEventListener('load', onLoad)
-    windowWeb3Wrapper.setWeb3((window as any).ethereum)
+    if ((window as any).ethereum) {
+      window.removeEventListener('load', onLoad)
+      windowWeb3Wrapper.setWeb3((window as any).ethereum)
+    }
   }
   window.addEventListener('load', onLoad)
 }
