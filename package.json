@@ -1,6 +1,6 @@
 {
   "name": "@spankchain-readonly/spankbank-web3",
-  "version": "0.1.3-rc1",
+  "version": "0.1.3-rc2",
   "main": "dist/spankbank.js",
   "types": "dist/@types/spankbank.d.ts",
   "scripts": {

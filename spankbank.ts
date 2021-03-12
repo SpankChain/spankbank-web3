@@ -17,17 +17,6 @@ class Web3Wrapper {
     this.onWeb3Load = new Promise(res => this._onLoadRes = res)
   }
 
-
-  // const Web3 = require("web3");
-  // const ethEnabled = () => {
-  //   if (window.ethereum) {
-  //     window.web3 = new Web3(window.ethereum);
-  //     window.ethereum.enable();
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
   setWeb3(web3) {
     console.log("Hello there")
     console.log(web3)
@@ -35,6 +24,10 @@ class Web3Wrapper {
 
     if (web3) {
       console.log("LOOKS LIKE WE MADE IT")
+      console.log(web3)
+      console.log(web3.request)
+      console.log("CONFUSED_CAT")
+
       web3.request({ method: 'eth_accounts' })(() => {
         this.web3FullyLoaded = true
         this._onLoadRes(web3)
