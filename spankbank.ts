@@ -25,7 +25,11 @@ class Web3Wrapper {
     if (web3) {
       console.log("LOOKS LIKE WE MADE IT")
       console.log(web3)
-      console.log(web3.request({ method: 'eth_accounts' }))
+      web3.request({ method: 'eth_accounts' }).then(accounts => {
+        console.log("200 - cool")
+        console.log(accounts)
+        return accounts
+      })
       console.log("CONFUSED_CAT")
 
       web3.request({ method: 'eth_accounts' }).then((ressy) => {
