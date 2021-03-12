@@ -2,6 +2,7 @@ declare let SMART_CONTRACT_ROOT: string
 declare global {
   interface Window {
     web3: any
+    ethereum: any
   }
 }
 
@@ -17,30 +18,17 @@ class Web3Wrapper {
     this.onWeb3Load = new Promise(res => this._onLoadRes = res)
   }
 
-  setWeb3(web3) {
-    console.log("Hello there")
-    console.log(web3)
-    this.web3 = web3
+  setWeb3() {
+    this.web3 = window.ethereum
 
-    if (web3) {
-      console.log("LOOKS LIKE WE MADE IT")
-      console.log(web3)
-      web3.request({ method: 'eth_accounts' }).then(accounts => {
-        console.log("200 - cool")
-        console.log(accounts)
-        return accounts
-      })
-      console.log("CONFUSED_CAT")
-
-      web3.request({ method: 'eth_accounts' }).then((ressy) => {
-        console.log("Here's the ressy: ", ressy)
+    if (window.ethereum) {
+      window.ethereum.request({ method: 'eth_accounts' }).then((res) => {
         this.web3FullyLoaded = true
-        this._onLoadRes(web3)
+        this._onLoadRes(this.web3)
       })
-      console.log("DID WE MAKE IT?!?!?!")
     } else {
       this.web3FullyLoaded = true
-      this._onLoadRes(web3)
+      this._onLoadRes(window.ethereum)
     }
     return this
   }
@@ -52,15 +40,10 @@ class Web3Wrapper {
 
 let windowWeb3Wrapper = new Web3Wrapper()
 
-if (typeof window == 'undefined') {
-  console.log("NOT HERE RIGHT?")
-  windowWeb3Wrapper.setWeb3(null)
-} else {
-  let onLoad = () => {
-    if ((window as any).ethereum) {
-      window.removeEventListener('load', onLoad)
-      windowWeb3Wrapper.setWeb3((window as any).ethereum)
-    }
+let onLoad = () => {
+  if (window.ethereum) {
+    window.removeEventListener('load', onLoad)
+    windowWeb3Wrapper.setWeb3()
   }
   window.addEventListener('load', onLoad)
 }
@@ -135,7 +118,7 @@ export class LedgerWeb3Wrapper {
       let windowWeb3 = await windowWeb3Wrapper.onWeb3Load
       if (!windowWeb3)
         throw new Error('Web3 not found and no networkId provided to LedgerWeb3Wrapper')
-      opts.networkId = await p(windowWeb3.version, 'getNetwork')
+      opts.networkId = window.ethereum.networkVersion
     }
 
     if (!opts.rpcUrl) {
@@ -182,10 +165,7 @@ export class LedgerWeb3Wrapper {
     this.engine.addProvider(new RpcSubprovider({ rpcUrl: opts.rpcUrl}))
     this.engine.start()
 
-    let accounts = await p(this.web3.eth, 'getAccounts')
-
-    this.web3.eth.defaultAccount = accounts[0]
-    log.info('Using Ledger address:', accounts[0], 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
+    log.info('Using Ledger address:', window.ethereum.selectedAddress, 'on network', opts.networkId, 'with RPC URL', opts.rpcUrl)
 
     return this.web3
   }
@@ -271,11 +251,11 @@ let sol2tsCasts = {
 export async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
   let POLL_INTERVAL = 500
   let startTime = Date.now()
-
   while (true) {
     if (startTime > Date.now() + (timeout * 1000))
       throw new Error(`Timeout waiting for transaction '${txHash}' (${timeout} seconds)`)
 
+    const web3 = new (require('web3'))(window.ethereum)
     let receipt: any = await new Promise((res, rej) => {
       try {
         web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
@@ -373,21 +353,26 @@ export abstract class SmartContractWrapper {
 
   async _call(contractFuncName, args?): Promise<any> {
     args = args || []
-    return await this._metamaskCall(contractFuncName, args, async (cb) => {
-      const contract = this.web3.eth.contract(this.getContractAbi()).at(this.contractAddress)
-      const constant = contract.abi.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
 
-      if (!constant && !(this.web3.currentProvider && this.web3.eth.defaultAccount)) {
+    return await this._metamaskCall(contractFuncName, args, async (cb) => {
+      const web3 = new (require('web3'))(window.ethereum)
+      const contract = new web3.eth.Contract(this.getContractAbi(), this.contractAddress)
+      const constant = contract._jsonInterface.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
+
+      if (!constant && !(web3.currentProvider && window.ethereum.selectedAddress)) {
         throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
       }
 
+      console.log("Derpahere")
+      console.log(this.callOptions)
       let options = { ...this.callOptions }
 
-      if (!this.callOptions.gas && !constant)
-        options.gas = await p(contract[contractFuncName], 'estimateGas', ...args)
+      console.log("Derpathere")
+      console.log(web3)
+      console.log(contract)
 
       if (!this.callOptions.gasPrice)
-        options.gasPrice = (await p(this.web3.eth, 'getGasPrice')).toNumber()
+        options.gasPrice = await web3.eth.getGasPrice()
 
       contract[contractFuncName](...args, options, cb)
     })
@@ -398,7 +383,6 @@ export abstract class SmartContractWrapper {
     return await waitForTransactionReceipt(this.web3, tx, timeout)
   }
 }
-
 
 export interface Period {
   bootyFees: BootyAmount // the amount of BOOTY collected in fees

@@ -2,6 +2,7 @@
 declare global {
     interface Window {
         web3: any;
+        ethereum: any;
     }
 }
 export interface LedgerWeb3WrapperOpts {
