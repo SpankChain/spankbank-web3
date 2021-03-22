@@ -256,6 +256,8 @@ export async function waitForTransactionReceipt(web3: any, txHash: string, timeo
       throw new Error(`Timeout waiting for transaction '${txHash}' (${timeout} seconds)`)
 
     const web3 = new (require('web3'))(window.ethereum)
+    console.log("Testa")
+    console.log(web3)
     let receipt: any = await new Promise((res, rej) => {
       try {
         web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
