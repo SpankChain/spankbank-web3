@@ -368,7 +368,7 @@ export abstract class SmartContractWrapper {
 
         let options = { ...this.callOptions }
         if (!this.callOptions.gasPrice)
-            options.gasPrice = spankBankContract.estimateGas(contractFuncName)
+            options.gasPrice = await provider.gasPrice()
 
         const result = await bankWithSigner[contractFuncName](...args)
         cb(null, result)
