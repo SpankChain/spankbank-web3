@@ -6,6 +6,8 @@ declare global {
   }
 }
 
+const { BigNumber, ethers } = require('ethers')
+
 // A promise that will resolve once web3 is fully loaded, including Ethereum
 // accounts.
 class Web3Wrapper {
@@ -127,7 +129,7 @@ export class LedgerWeb3Wrapper {
         throw new Error('Web3 not found and no rpcUrl provided to LedgerWeb3Wrapper')
       opts.rpcUrl = networkDefaultRpcUrls[opts.networkId!]
       if (!opts.rpcUrl)
-        throw new Error('No default RPC URL for network "' + opts.networkId + '"; one must be provided.')
+        throw new Error('No default RPC URL for network "' + opts.networkId + '", one must be provided.')
     }
 
     this.isU2FSupported = await TransportU2F.isSupported()
@@ -230,18 +232,18 @@ let sol2tsCasts = {
   SpankPoints: x => x,
   EthAddress: x => x,
   Period: (x): Period => ({
-    bootyFees: x[0].toFixed(),
-    totalSpankPoints: x[1].toFixed(),
-    bootyMinted: x[2].toFixed(),
+    bootyFees: BigNumber.from(x[0]).toNumber(),
+    totalSpankPoints: BigNumber.from(x[1]).toNumber(),
+    bootyMinted: BigNumber.from(x[2]).toNumber(),
     mintingComplete: !!x[3],
-    startTime: x[4].toNumber(),
-    endTime: x[5].toNumber(),
-    closingVotes: x[6].toFixed(),
+    startTime: BigNumber.from(x[4]).toNumber(),
+    endTime: BigNumber.from(x[5]).toNumber(),
+    closingVotes: BigNumber.from(x[6]).toNumber(),
   }),
   Staker: (x): Staker => ({
-    spankStaked: x[0].toFixed(),
-    startingPeriod: x[1].toNumber(),
-    endingPeriod: x[2].toNumber(),
+    spankStaked: BigNumber.from(x[0]).toNumber(),
+    startingPeriod: BigNumber.from(x[1]).toNumber(),
+    endingPeriod: BigNumber.from(x[2]).toNumber(),
     delegateKey: x[3],
     bootyBase: x[4],
   }),
@@ -256,8 +258,6 @@ export async function waitForTransactionReceipt(web3: any, txHash: string, timeo
       throw new Error(`Timeout waiting for transaction '${txHash}' (${timeout} seconds)`)
 
     const web3 = new (require('web3'))(window.ethereum)
-    console.log("Testa")
-    console.log(web3)
     let receipt: any = await new Promise((res, rej) => {
       try {
         web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
@@ -357,26 +357,21 @@ export abstract class SmartContractWrapper {
     args = args || []
 
     return await this._metamaskCall(contractFuncName, args, async (cb) => {
-      const web3 = new (require('web3'))(window.ethereum)
-      const contract = new web3.eth.Contract(this.getContractAbi(), this.contractAddress)
-      const constant = contract._jsonInterface.filter(x => x.type === 'function' && x.name === contractFuncName)[0].constant
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const signer = provider.getSigner()
+        const spankBankContract = new ethers.Contract(this.contractAddress, this.getContractAbi(), provider)
+        const bankWithSigner = spankBankContract.connect(signer)
 
-      if (!constant && !(web3.currentProvider && window.ethereum.selectedAddress)) {
-        throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
-      }
+        if (!provider || !signer) {
+            throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
+        }
 
-      console.log("Derpahere")
-      console.log(this.callOptions)
-      let options = { ...this.callOptions }
+        let options = { ...this.callOptions }
+        if (!this.callOptions.gasPrice)
+            options.gasPrice = spankBankContract.estimateGas(contractFuncName)
 
-      console.log("Derpathere")
-      console.log(web3)
-      console.log(contract)
-
-      if (!this.callOptions.gasPrice)
-        options.gasPrice = await web3.eth.getGasPrice()
-
-      contract[contractFuncName](...args, options, cb)
+        const result = await bankWithSigner[contractFuncName](...args)
+        cb(null, result)
     })
   }
 
