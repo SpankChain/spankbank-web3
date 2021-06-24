@@ -109,7 +109,7 @@ describe('SpankBank: live tests', () => {
     sb.callOptions = {
       gas: 696969,
     }
-    let accounts = await new Promise((res, rej) => {
+    let accounts: any[] = await new Promise((res, rej) => {
       web3.eth.getAccounts((err, accounts) => {
         return err ? rej(err) : res(accounts)
       })

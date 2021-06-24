@@ -48,7 +48,7 @@ export declare abstract class SmartContractWrapper {
     contractAddress: EthAddress;
     abstract getContractAbi(): any;
     constructor(contractAddress: EthAddress, web3OrWrapper?: any);
-    _metamaskCall(funcName: any, args: any, fn: any): Promise<{}>;
+    _metamaskCall(funcName: any, args: any, fn: any): Promise<unknown>;
     _call(contractFuncName: any, args?: any): Promise<any>;
     waitForTransactionReceipt(tx: string, timeout?: number): Promise<any>;
 }

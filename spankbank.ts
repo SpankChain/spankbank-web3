@@ -366,10 +366,6 @@ export abstract class SmartContractWrapper {
             throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
         }
 
-        let options = { ...this.callOptions }
-        if (!this.callOptions.gasPrice)
-            options.gasPrice = await provider.gasPrice()
-
         const result = await bankWithSigner[contractFuncName](...args)
         cb(null, result)
     })
