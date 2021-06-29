@@ -27,11 +27,13 @@ export declare class LedgerWeb3Wrapper {
     then(...args: any[]): Promise<any>;
 }
 export declare type EthAddress = string;
-export declare type TxHash = string;
+export declare type TxHash = {
+    hash: string;
+};
 export declare type SpankAmount = string;
 export declare type SpankPoints = string;
 export declare type BootyAmount = string;
-export declare function waitForTransactionReceipt(web3: any, txHash: string, timeout?: number): Promise<any>;
+export declare function waitForTransactionReceipt(web3: any, txHash: TxHash, timeout?: number): Promise<any>;
 export interface Logger {
     debug: any;
     info: any;
@@ -50,7 +52,9 @@ export declare abstract class SmartContractWrapper {
     constructor(contractAddress: EthAddress, web3OrWrapper?: any);
     _metamaskCall(funcName: any, args: any, fn: any): Promise<unknown>;
     _call(contractFuncName: any, args?: any): Promise<any>;
-    waitForTransactionReceipt(tx: string, timeout?: number): Promise<any>;
+    waitForTransactionReceipt(tx: {
+        hash: string;
+    }, timeout?: number): Promise<any>;
 }
 export interface Period {
     bootyFees: BootyAmount;

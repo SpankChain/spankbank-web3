@@ -189,7 +189,7 @@ export class LedgerWeb3Wrapper {
 
 
 export type EthAddress = string
-export type TxHash = string
+export type TxHash = { hash: string }
 
 export type SpankAmount = string
 export type SpankPoints = string
@@ -250,7 +250,7 @@ let sol2tsCasts = {
 }
 
 
-export async function waitForTransactionReceipt(web3: any, txHash: string, timeout: number = 120): Promise<any> {
+export async function waitForTransactionReceipt(web3: any, txHash: TxHash, timeout: number = 120): Promise<any> {
   let POLL_INTERVAL = 500
   let startTime = Date.now()
   while (true) {
@@ -366,12 +366,12 @@ export abstract class SmartContractWrapper {
             throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
         }
 
-        const result = await bankWithSigner[contractFuncName](...args)
+        const result = await bankWithSigner[contractFuncName](...args, { gasLimit: 200000 })
         cb(null, result)
     })
   }
 
-  async waitForTransactionReceipt(tx: string, timeout: number = 120): Promise<any> {
+  async waitForTransactionReceipt(tx: { hash: string }, timeout: number = 120): Promise<any> {
     await this.loaded
     return await waitForTransactionReceipt(this.web3, tx, timeout)
   }
