@@ -255,12 +255,12 @@ export async function waitForTransactionReceipt(web3: any, txHash: TxHash, timeo
   let startTime = Date.now()
   while (true) {
     if (startTime > Date.now() + (timeout * 1000))
-      throw new Error(`Timeout waiting for transaction '${txHash}' (${timeout} seconds)`)
+      throw new Error(`Timeout waiting for transaction '${txHash.hash}' (${timeout} seconds)`)
 
     const web3 = new (require('web3'))(window.ethereum)
     let receipt: any = await new Promise((res, rej) => {
       try {
-        web3.eth.getTransactionReceipt(txHash, (err, receipt) => {
+        web3.eth.getTransactionReceipt(txHash.hash, (err, receipt) => {
           if (err)
             return rej(err)
           res(receipt)
@@ -366,7 +366,7 @@ export abstract class SmartContractWrapper {
             throw new MetamaskError('NOT_SIGNED_IN', `Web3 is not signed in, but ${contractFuncName} requires gas.`)
         }
 
-        const result = await bankWithSigner[contractFuncName](...args, { gasLimit: 200000 })
+        const result = await bankWithSigner[contractFuncName](...args)
         cb(null, result)
     })
   }
